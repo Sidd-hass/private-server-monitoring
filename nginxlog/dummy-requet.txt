@@ -1,0 +1,8 @@
+while true; do
+  seq 1 50 | xargs -P10 -I{} sh -c '
+    curl -s http://127.0.0.1/ > /dev/null
+    curl -s http://127.0.0.1/non-existent-page-$RANDOM > /dev/null
+    curl -s http://127.0.0.1:8080/error500 > /dev/null
+  '
+  sleep 0.1
+done

@@ -1,0 +1,135 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "/etc/prometheus/alert.rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+scrape_configs:
+  # Host operating system telemetry
+  - job_name: 'debian_servers'
+    static_configs:
+      - targets: ['181.214.10.244:9100']
+        labels:
+          environment: 'production'
+          server_name: '181.214.10.244'
+          os: 'debian'
+      - targets: ['181.214.10.246:9100']
+        labels:
+          environment: 'production'
+          server_name: '181.214.10.246'
+          os: 'debian'
+      - targets: ['192.168.1.178:9100']
+        labels:
+          environment: 'production'
+          server_name: 'Tahseel'
+          os: 'debian'
+    file_sd_configs:
+      - files:
+          - '/etc/prometheus/targets/*.json'
+        refresh_interval: 1m
+
+  - job_name: 'haproxy_tasheel'
+    static_configs:
+      - targets: ['192.168.1.178:8404']
+        labels:
+          environment: 'production'
+          server_name: 'Tahseel'
+          os: 'debian'
+
+  # Existing custom Nginx Python exporters
+  - job_name: 'custom_python_exporter'
+    static_configs:
+      - targets: ['181.214.10.244:8000']
+        labels:
+          environment: 'production'
+          server_name: '181.214.10.244'
+          os: 'debian'
+      - targets: ['181.214.10.246:8000']
+        labels:
+          environment: 'production'
+          server_name: '181.214.10.246'
+          os: 'debian'
+
+  # ICMP ping checks
+  - job_name: 'blackbox_ping'
+    metrics_path: /probe
+    params:
+      module: [icmp_ping]
+    static_configs:
+      - targets:
+          - '181.214.10.244'
+        labels:
+          environment: 'production'
+          server_name: '181.214.10.244'
+          os: 'debian'
+      - targets:
+          - '181.214.10.246'
+        labels:
+          environment: 'production'
+          server_name: '181.214.10.246'
+          os: 'debian'
+      - targets:
+          - '192.168.1.178'
+        labels:
+          environment: 'production'
+          server_name: 'Tahseel'
+          os: 'debian'
+      - targets:
+          - '8.8.8.8'
+        labels:
+          environment: 'production'
+          server_name: '8.8.8.8'
+          os: 'external'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # TCP port probes
+  - job_name: 'blackbox_tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - '181.214.10.244:9100'
+          - '181.214.10.244:8000'
+      - targets:
+          - '181.214.10.246:9100'
+          - '181.214.10.246:8000'
+      - targets:
+          - '192.168.1.178:9100'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # HTTP endpoint probes
+  - job_name: 'blackbox_http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - 'http://181.214.10.244:8000/metrics'
+      - targets:
+          - 'http://181.214.10.246:8000/metrics'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

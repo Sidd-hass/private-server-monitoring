@@ -1,0 +1,112 @@
+groups:
+  - name: debian_system_alerts
+    rules:
+      - alert: CpuSpike
+        expr: 100 - (avg by (instance, server_name) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU Spike on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "CPU usage exceeded 85% for 5 minutes on server {{ $labels.server_name }}."
+
+      - alert: RamCritical
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAM Critical on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "Memory usage exceeded 90% for 3 minutes on server {{ $labels.server_name }}."
+
+      - alert: DiskCritical
+        expr: 100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"}) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Root Disk Space Low on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "Root partition (/) disk usage exceeded 85% for 5 minutes on server {{ $labels.server_name }}."
+
+      - alert: NasUsageWarning
+        expr: 100 * (1 - (node_filesystem_avail_bytes{job="debian_servers", server_name="Tahseel", mountpoint="/u2_nas", fstype="cifs"} / node_filesystem_size_bytes{job="debian_servers", server_name="Tahseel", mountpoint="/u2_nas", fstype="cifs"})) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NAS space usage high on {{ $labels.server_name }}"
+          description: "NAS mount /u2_nas is over 80% full. Current usage is {{ $value | printf \"%.1f\" }}%."
+
+      - alert: NasUsageCritical
+        expr: 100 * (1 - (node_filesystem_avail_bytes{job="debian_servers", server_name="Tahseel", mountpoint="/u2_nas", fstype="cifs"} / node_filesystem_size_bytes{job="debian_servers", server_name="Tahseel", mountpoint="/u2_nas", fstype="cifs"})) > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NAS space critically low on {{ $labels.server_name }}"
+          description: "NAS mount /u2_nas is over 90% full. Current usage is {{ $value | printf \"%.1f\" }}%."
+
+      - alert: NasMountMissing
+        expr: absent(node_filesystem_size_bytes{job="debian_servers", server_name="Tahseel", instance="192.168.1.178:9100", mountpoint="/u2_nas", fstype="cifs"}) and on(instance) (up{job="debian_servers", server_name="Tahseel", instance="192.168.1.178:9100"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NAS mount missing on {{ $labels.server_name }}"
+          description: "Prometheus can scrape Tahseel, but Node Exporter reports no CIFS filesystem at /u2_nas."
+
+      - alert: ServerDown
+        expr: up{job="debian_servers"} == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "Server Down: {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "Debian server OS target {{ $labels.server_name }} ({{ $labels.instance }}) is unreachable."
+
+  - name: custom_nginx_alerts
+    rules:
+      - alert: CustomNginxExporterDown
+        expr: up{job="custom_python_exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Custom Nginx Exporter Down on {{ $labels.server_name }}"
+          description: "The exporter container on {{ $labels.server_name }} ({{ $labels.instance }}) is unreachable."
+
+      - alert: NginxDown
+        expr: custom_nginx_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nginx Web Server DOWN on {{ $labels.server_name }}"
+          description: "The Nginx web server process on {{ $labels.server_name }} ({{ $labels.instance }}) is unreachable or failing status checks."
+
+      - alert: NginxHighHttp5xxErrors
+        expr: sum(rate(custom_nginx_http_requests_total{status_code=~"5.."}[5m])) by (server_name, instance) > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx Server Errors on {{ $labels.server_name }}"
+          description: "Nginx on {{ $labels.server_name }} ({{ $labels.instance }}) is generating over 2 5xx errors/sec."
+
+      - alert: NginxHighHttp4xxErrors
+        expr: sum(rate(custom_nginx_http_requests_total{status_code=~"4.."}[5m])) by (server_name, instance) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP 4xx Client Errors on {{ $labels.server_name }}"
+          description: "Nginx on {{ $labels.server_name }} ({{ $labels.instance }}) is generating high 4xx client errors (404/403/401)."
+
+      - alert: NginxHighActiveConnections
+        expr: custom_nginx_active_connections > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Active Nginx Connections on {{ $labels.server_name }}"
+          description: "Active connections reached {{ $value }} on {{ $labels.server_name }} ({{ $labels.instance }})."
