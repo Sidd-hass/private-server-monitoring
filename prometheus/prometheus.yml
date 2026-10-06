@@ -289,6 +289,56 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
+  # Public reachability of the Medan SSH NAT rules. These checks are made
+  # directly from the central monitoring host and remain independent of VPN.
+  - job_name: 'blackbox_public_ssh'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets: ['94.206.56.70:11446']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my01'
+          collection_path: 'public_ssh'
+      - targets: ['94.206.56.71:11447']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my02'
+          collection_path: 'public_ssh'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Full OS/network metrics via persistent SSH local forwards on the Docker
+  # host. See docs/public-medan-monitoring.md before enabling these targets.
+  - job_name: 'medan_public_ssh_tunnel'
+    static_configs:
+      - targets: ['host.docker.internal:19101']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my01'
+          collection_path: 'public_ssh_tunnel'
+          os: 'debian'
+      - targets: ['host.docker.internal:19102']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my02'
+          collection_path: 'public_ssh_tunnel'
+          os: 'debian'
+
   # HTTP endpoint probes
   - job_name: 'blackbox_http'
     metrics_path: /probe

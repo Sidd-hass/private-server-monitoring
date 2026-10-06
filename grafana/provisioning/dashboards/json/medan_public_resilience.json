@@ -1,0 +1,77 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "probe_success{job=\"blackbox_public_ssh\"}", "instant": true, "legendFormat": "{{server_name}} — {{instance}}", "refId": "A"}],
+      "title": "Public SSH Port Reachability",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"options": {"0": {"text": "NO METRICS", "color": "red"}, "1": {"text": "SCRAPING", "color": "green"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "up{job=\"medan_public_ssh_tunnel\"}", "instant": true, "legendFormat": "{{server_name}} tunnel", "refId": "A"}],
+      "title": "Public SSH Tunnel Metrics",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}, "unit": "bps"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 8},
+      "id": 3,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "sum(rate(node_network_receive_bytes_total{job=\"medan_public_ssh_tunnel\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) * 8", "legendFormat": "{{server_name}} inbound", "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "sum(rate(node_network_transmit_bytes_total{job=\"medan_public_ssh_tunnel\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) * 8", "legendFormat": "{{server_name}} outbound", "refId": "B"}
+      ],
+      "title": "Host Network Throughput via Public SSH",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2}, "unit": "pps"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 17},
+      "id": 4,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "sum(rate(node_network_receive_drop_total{job=\"medan_public_ssh_tunnel\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) + rate(node_network_transmit_drop_total{job=\"medan_public_ssh_tunnel\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)", "legendFormat": "{{server_name}} drops", "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "sum(rate(node_network_receive_errs_total{job=\"medan_public_ssh_tunnel\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) + rate(node_network_transmit_errs_total{job=\"medan_public_ssh_tunnel\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)", "legendFormat": "{{server_name}} errors", "refId": "B"}
+      ],
+      "title": "Host Interface Errors and Drops via Public SSH",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["medan", "network", "resilience", "public-ssh"],
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "",
+  "title": "Medan Public Path Resilience",
+  "uid": "medan-public-resilience",
+  "version": 1
+}

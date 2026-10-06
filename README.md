@@ -159,6 +159,22 @@ Once you log into Grafana at `http://<SERVER_IP>:3000`, open **Dashboards -> Obs
 - **Memory Breakdown:** Stacked breakdown of Used, Free, Buffers, and Cached memory.
 - **Network Throughput & Drops:** Bandwidth in bytes/sec and packet error/drop counters.
 
+## Public-side Medan collection
+
+The `blackbox_public_ssh` job checks the public SSH endpoints for Medan `my01`
+and `my02` independently of the VPN. The `medan_public_ssh_tunnel` scrape job
+can collect full Node Exporter metrics over persistent SSH local forwards,
+including when VPN routing is unavailable. It requires an authorized SSH key,
+verified host keys, and local tunnel ports reachable only from the Prometheus
+Docker network. The **Medan Public Path Resilience** dashboard shows public SSH
+port availability, tunnel scrape status, and host interface traffic, errors,
+and drops. See [docs/public-medan-monitoring.md](docs/public-medan-monitoring.md)
+for the inventory mapping, setup requirements, and tunnel commands.
+
+This public fallback currently covers only `my01` and `my02`; other private
+Medan hosts and the Shams, Dubai South, and SPC networks continue to use their
+existing VPN routes.
+
 ---
 
 ## 🚨 Alert Rules Overview

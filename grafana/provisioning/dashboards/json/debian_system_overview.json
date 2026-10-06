@@ -102,7 +102,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "up{job=\"debian_servers\", server_name=~\"$server\"}",
+          "expr": "up{cluster=~\"$cluster\",job=\"debian_servers\", server_name=~\"$server\"}",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "range": false,
@@ -165,7 +165,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "time() - node_boot_time_seconds{server_name=~\"$server\"}",
+          "expr": "time() - node_boot_time_seconds{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "range": false,
@@ -236,7 +236,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "100 - (avg by (server_name) (rate(node_cpu_seconds_total{mode=\"idle\", server_name=~\"$server\"}[5m])) * 100)",
+          "expr": "100 - (avg by (server_name) (rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\", server_name=~\"$server\"}[5m])) * 100)",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "range": false,
@@ -307,7 +307,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "(1 - (node_memory_MemAvailable_bytes{server_name=~\"$server\"} / node_memory_MemTotal_bytes{server_name=~\"$server\"})) * 100",
+          "expr": "(1 - (node_memory_MemAvailable_bytes{cluster=~\"$cluster\",server_name=~\"$server\"} / node_memory_MemTotal_bytes{cluster=~\"$cluster\",server_name=~\"$server\"})) * 100",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "range": false,
@@ -378,7 +378,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\", server_name=~\"$server\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/\", server_name=~\"$server\"})",
+          "expr": "100 - ((node_filesystem_avail_bytes{cluster=~\"$cluster\",mountpoint=\"/\", server_name=~\"$server\"} * 100) / node_filesystem_size_bytes{cluster=~\"$cluster\",mountpoint=\"/\", server_name=~\"$server\"})",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "range": false,
@@ -444,7 +444,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "100 - (avg by (server_name) (rate(node_cpu_seconds_total{mode=\"idle\", server_name=~\"$server\"}[5m])) * 100)",
+          "expr": "100 - (avg by (server_name) (rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\", server_name=~\"$server\"}[5m])) * 100)",
           "legendFormat": "CPU Busy Total (%) - {{server_name}}",
           "refId": "A"
         },
@@ -453,7 +453,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{mode=\"user\", server_name=~\"$server\"}[5m])) * 100",
+          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"user\", server_name=~\"$server\"}[5m])) * 100",
           "legendFormat": "User (%) - {{server_name}}",
           "refId": "B"
         },
@@ -462,7 +462,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{mode=\"system\", server_name=~\"$server\"}[5m])) * 100",
+          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"system\", server_name=~\"$server\"}[5m])) * 100",
           "legendFormat": "System (%) - {{server_name}}",
           "refId": "C"
         },
@@ -471,7 +471,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{mode=\"iowait\", server_name=~\"$server\"}[5m])) * 100",
+          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"iowait\", server_name=~\"$server\"}[5m])) * 100",
           "legendFormat": "I/O Wait (%) - {{server_name}}",
           "refId": "D"
         }
@@ -519,7 +519,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_load1{server_name=~\"$server\"}",
+          "expr": "node_load1{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Load 1m - {{server_name}}",
           "refId": "A"
         },
@@ -528,7 +528,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_load5{server_name=~\"$server\"}",
+          "expr": "node_load5{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Load 5m - {{server_name}}",
           "refId": "B"
         },
@@ -537,7 +537,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_load15{server_name=~\"$server\"}",
+          "expr": "node_load15{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Load 15m - {{server_name}}",
           "refId": "C"
         }
@@ -604,7 +604,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_MemTotal_bytes{server_name=~\"$server\"} - node_memory_MemAvailable_bytes{server_name=~\"$server\"}",
+          "expr": "node_memory_MemTotal_bytes{cluster=~\"$cluster\",server_name=~\"$server\"} - node_memory_MemAvailable_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Used - {{server_name}}",
           "refId": "A"
         },
@@ -613,7 +613,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_Cached_bytes{server_name=~\"$server\"}",
+          "expr": "node_memory_Cached_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Cached - {{server_name}}",
           "refId": "B"
         },
@@ -622,7 +622,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_Buffers_bytes{server_name=~\"$server\"}",
+          "expr": "node_memory_Buffers_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Buffers - {{server_name}}",
           "refId": "C"
         },
@@ -631,7 +631,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_MemFree_bytes{server_name=~\"$server\"}",
+          "expr": "node_memory_MemFree_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "legendFormat": "Free - {{server_name}}",
           "refId": "D"
         }
@@ -681,7 +681,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_disk_read_bytes_total{server_name=~\"$server\"}[5m])",
+          "expr": "rate(node_disk_read_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
           "legendFormat": "Read (B/s) - {{device}} - {{server_name}}",
           "refId": "A"
         },
@@ -690,7 +690,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_disk_written_bytes_total{server_name=~\"$server\"}[5m])",
+          "expr": "rate(node_disk_written_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
           "legendFormat": "Write (B/s) - {{device}} - {{server_name}}",
           "refId": "B"
         }
@@ -752,7 +752,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_receive_bytes_total{server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
+          "expr": "rate(node_network_receive_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
           "legendFormat": "Inbound (Receive) - {{device}} - {{server_name}}",
           "refId": "A"
         },
@@ -761,7 +761,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_transmit_bytes_total{server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
+          "expr": "rate(node_network_transmit_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
           "legendFormat": "Outbound (Transmit) - {{device}} - {{server_name}}",
           "refId": "B"
         }
@@ -814,7 +814,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_receive_drop_total{server_name=~\"$server\"}[5m]) + rate(node_network_transmit_drop_total{server_name=~\"$server\"}[5m])",
+          "expr": "rate(node_network_receive_drop_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) + rate(node_network_transmit_drop_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
           "legendFormat": "Packet Drops (Total/sec) - {{device}} - {{server_name}}",
           "refId": "A"
         },
@@ -823,402 +823,12 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_receive_errs_total{server_name=~\"$server\"}[5m]) + rate(node_network_transmit_errs_total{server_name=~\"$server\"}[5m])",
+          "expr": "rate(node_network_receive_errs_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) + rate(node_network_transmit_errs_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
           "legendFormat": "Errors (Total/sec) - {{device}} - {{server_name}}",
           "refId": "B"
         }
       ],
       "title": "Packet Drops & Network Errors",
-      "type": "timeseries"
-    },
-    {
-      "id": 104,
-      "title": "NAS Storage & Health",
-      "type": "row",
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 33
-      }
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 80
-              },
-              {
-                "color": "red",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percent",
-          "min": 0,
-          "max": 100
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 0,
-        "y": 34
-      },
-      "id": 12,
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
-        "showThresholdLabels": false,
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "100 * (1 - (node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"} / node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}))",
-          "instant": true,
-          "legendFormat": "{{server_name}} /u2_nas",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "NAS Usage",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 6,
-        "y": 34
-      },
-      "id": 13,
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
-        "showThresholdLabels": false,
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
-          "instant": true,
-          "legendFormat": "{{server_name}} free",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "NAS Free Space",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "color": "red",
-                  "index": 0,
-                  "text": "MISSING"
-                },
-                "1": {
-                  "color": "green",
-                  "index": 1,
-                  "text": "MOUNTED"
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short",
-          "min": 0,
-          "max": 1
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 12,
-        "y": 34
-      },
-      "id": 14,
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
-        "showThresholdLabels": false,
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "value"
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "count(node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}) or vector(0)",
-          "instant": true,
-          "legendFormat": "{{server_name}}",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "NAS Mount Status",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "NO FIRING NAS ALERTS"
-                },
-                "1": {
-                  "color": "red",
-                  "index": 1,
-                  "text": "NAS ALERT FIRING"
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 18,
-        "y": 34
-      },
-      "id": 15,
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
-        "showThresholdLabels": false,
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "value"
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "sum(ALERTS{alertname=~\"Nas.*\",server_name=\"Tahseel\",alertstate=\"firing\"}) or vector(0)",
-          "instant": true,
-          "legendFormat": "NAS alerts",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "NAS Alert Status",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 10
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 40
-      },
-      "id": 16,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"} - node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
-          "instant": false,
-          "legendFormat": "{{server_name}} used",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
-          "instant": false,
-          "legendFormat": "{{server_name}} free",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "NAS Capacity & Free Space Trend",
       "type": "timeseries"
     }
   ],
@@ -1227,33 +837,58 @@
   "tags": [
     "debian",
     "monitoring",
-    "servers"
+    "servers",
+    "clusters"
   ],
   "templating": {
     "list": [
       {
-        "allValue": ".*",
-        "current": {},
+        "name": "cluster",
+        "label": "Cluster",
+        "type": "query",
         "datasource": {
           "type": "prometheus",
           "uid": "Prometheus"
         },
-        "definition": "label_values(up{job=\"debian_servers\"}, server_name)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Debian Server",
-        "multi": false,
-        "name": "server",
-        "options": [],
+        "definition": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
         "query": {
-          "query": "label_values(up{job=\"debian_servers\"}, server_name)",
+          "query": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": false,
         "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
         "sort": 1,
-        "type": "query"
+        "hide": 0,
+        "current": {},
+        "options": [],
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "server",
+        "label": "Server",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "Prometheus"
+        },
+        "definition": "label_values(up{job=\"debian_servers\", cluster=~\"$cluster\"}, server_name)",
+        "query": {
+          "query": "label_values(up{job=\"debian_servers\", cluster=~\"$cluster\"}, server_name)",
+          "refId": "StandardVariableQuery"
+        },
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "hide": 0,
+        "current": {},
+        "options": [],
+        "regex": "",
+        "skipUrlSync": false
       }
     ]
   },
@@ -1265,5 +900,5 @@
   "timezone": "browser",
   "title": "Debian Server Fleet Overview",
   "uid": "debian-fleet-overview",
-  "version": 3
+  "version": 4
 }
