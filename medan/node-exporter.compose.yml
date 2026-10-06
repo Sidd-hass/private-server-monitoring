@@ -1,0 +1,14 @@
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.12.1
+    container_name: medan-node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
+      - '--web.listen-address=${NODE_EXPORTER_LISTEN_ADDRESS:?Set this host private IP in .env}'
+    volumes:
+      - '/:/host:ro,rslave'

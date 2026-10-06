@@ -1,0 +1,6 @@
+modules:
+  icmp_ping:
+    prober: icmp
+    timeout: 3s
+    icmp:
+      preferred_ip_protocol: ip4

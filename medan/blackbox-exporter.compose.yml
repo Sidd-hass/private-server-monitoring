@@ -1,0 +1,13 @@
+services:
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: medan-blackbox-exporter
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_RAW
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
+      - '--web.listen-address=${BLACKBOX_LISTEN_ADDRESS:?Set this host private IP in .env}'
+    volumes:
+      - './blackbox.yml:/etc/blackbox_exporter/config.yml:ro'

@@ -1,1 +1,152 @@
-[]
+[
+  {
+    "targets": ["192.168.99.46:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "medan",
+      "site": "ocube",
+      "server_name": "my01",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.99.47:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "medan",
+      "site": "ocube",
+      "server_name": "my02",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.99.42:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "medan",
+      "site": "ocube",
+      "server_name": "my03",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.99.40:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "medan",
+      "site": "ocube",
+      "server_name": "my04",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.125.40:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "shams",
+      "site": "shams",
+      "server_name": "shams-uc01",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.125.41:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "shams",
+      "site": "shams",
+      "server_name": "shams-uc02",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.125.44:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "shams",
+      "site": "shams",
+      "server_name": "shams-custom-reporting-server",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.200.102:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "spc",
+      "site": "spc",
+      "server_name": "spc-sj01",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.200.103:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "spc",
+      "site": "spc",
+      "server_name": "spc-sj02",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.200.104:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "spc",
+      "site": "spc",
+      "server_name": "spc-sj03",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["172.16.200.106:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "spc",
+      "site": "spc",
+      "server_name": "spc-custom-reporting-server",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.160.6:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "dubai_south",
+      "site": "dubai-south",
+      "server_name": "ds01",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.160.7:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "dubai_south",
+      "site": "dubai-south",
+      "server_name": "ds02",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.160.213:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "dubai_south",
+      "site": "dubai-south",
+      "server_name": "dsouth-ocube-custom-report",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.160.214:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "dubai_south",
+      "site": "dubai-south",
+      "server_name": "dsouth-ocube-transcript",
+      "os": "debian"
+    }
+  }
+]

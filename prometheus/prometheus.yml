@@ -86,6 +86,130 @@ scrape_configs:
           environment: 'production'
           server_name: '8.8.8.8'
           os: 'external'
+      # Medan/OCube hosts and gateways; probes need a route inside the cluster.
+      - targets:
+          - '192.168.99.46'
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my01'
+          os: 'debian'
+      - targets:
+          - '192.168.99.47'
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my02'
+          os: 'debian'
+      - targets:
+          - '192.168.99.42'
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my03'
+          os: 'debian'
+      - targets:
+          - '192.168.99.40'
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my04'
+          os: 'debian'
+      # Shams servers reached over the OpenVPN-routed private subnet.
+      - targets:
+          - '172.16.125.40'
+        labels:
+          environment: 'production'
+          cluster: 'shams'
+          site: 'shams'
+          server_name: 'shams-uc01'
+          os: 'debian'
+      - targets:
+          - '172.16.125.41'
+        labels:
+          environment: 'production'
+          cluster: 'shams'
+          site: 'shams'
+          server_name: 'shams-uc02'
+          os: 'debian'
+      - targets:
+          - '172.16.125.44'
+        labels:
+          environment: 'production'
+          cluster: 'shams'
+          site: 'shams'
+          server_name: 'shams-custom-reporting-server'
+          os: 'debian'
+      # SPC hosts and custom report server, reached through the OpenVPN route.
+      - targets:
+          - '172.16.200.102'
+        labels:
+          environment: 'production'
+          cluster: 'spc'
+          site: 'spc'
+          server_name: 'spc-sj01'
+          os: 'debian'
+      - targets:
+          - '172.16.200.103'
+        labels:
+          environment: 'production'
+          cluster: 'spc'
+          site: 'spc'
+          server_name: 'spc-sj02'
+          os: 'debian'
+      - targets:
+          - '172.16.200.104'
+        labels:
+          environment: 'production'
+          cluster: 'spc'
+          site: 'spc'
+          server_name: 'spc-sj03'
+          os: 'debian'
+      - targets:
+          - '172.16.200.106'
+        labels:
+          environment: 'production'
+          cluster: 'spc'
+          site: 'spc'
+          server_name: 'spc-custom-reporting-server'
+          os: 'debian'
+      # Dubai South servers reachable over the OpenVPN-routed private subnet.
+      - targets:
+          - '192.168.160.6'
+        labels:
+          environment: 'production'
+          cluster: 'dubai_south'
+          site: 'dubai-south'
+          server_name: 'ds01'
+          os: 'debian'
+      - targets:
+          - '192.168.160.7'
+        labels:
+          environment: 'production'
+          cluster: 'dubai_south'
+          site: 'dubai-south'
+          server_name: 'ds02'
+          os: 'debian'
+      - targets:
+          - '192.168.160.213'
+        labels:
+          environment: 'production'
+          cluster: 'dubai_south'
+          site: 'dubai-south'
+          server_name: 'dsouth-ocube-custom-report'
+          os: 'debian'
+      - targets:
+          - '192.168.160.214'
+        labels:
+          environment: 'production'
+          cluster: 'dubai_south'
+          site: 'dubai-south'
+          server_name: 'dsouth-ocube-transcript'
+          os: 'debian'
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -93,6 +217,55 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+
+  # Gateway ICMP probes originate from my02, which can route to the private gateway subnet.
+  - job_name: 'blackbox_ping_medan'
+    metrics_path: /probe
+    params:
+      module: [icmp_ping]
+    static_configs:
+      - targets: ['172.21.2.17']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'freeswitch-gateway'
+          os: 'gateway'
+      - targets: ['172.21.2.14']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'sbc-gateway'
+          os: 'gateway'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 192.168.99.47:9115
+
+  # Probe the Dubai South GSM gateway from a Blackbox Exporter inside that subnet.
+  - job_name: 'blackbox_ping_dubai_south'
+    metrics_path: /probe
+    params:
+      module: [icmp_ping]
+    static_configs:
+      - targets: ['192.168.160.211']
+        labels:
+          environment: 'production'
+          cluster: 'dubai_south'
+          site: 'dubai-south'
+          server_name: 'gsm-gateway-ds'
+          os: 'gateway'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 192.168.160.6:9115
 
   # TCP port probes
   - job_name: 'blackbox_tcp'
