@@ -24,23 +24,24 @@ scrape_configs:
           environment: 'production'
           server_name: '181.214.10.246'
           os: 'debian'
-      - targets: ['192.168.1.178:9100']
-        labels:
-          environment: 'production'
-          server_name: 'Tahseel'
-          os: 'debian'
+      # Tasheel node-exporter target disabled:
+      # - targets: ['192.168.1.178:9100']
+      #   labels:
+      #     environment: 'production'
+      #     server_name: 'Tahseel'
+      #     os: 'debian'
     file_sd_configs:
       - files:
           - '/etc/prometheus/targets/*.json'
         refresh_interval: 1m
 
-  - job_name: 'haproxy_tasheel'
-    static_configs:
-      - targets: ['192.168.1.178:8404']
-        labels:
-          environment: 'production'
-          server_name: 'Tahseel'
-          os: 'debian'
+  # - job_name: 'haproxy_tasheel'
+  #   static_configs:
+  #     - targets: ['192.168.1.178:8404']
+  #       labels:
+  #         environment: 'production'
+  #         server_name: 'Tahseel'
+  #         os: 'debian'
 
   # Existing custom Nginx Python exporters
   - job_name: 'custom_python_exporter'
@@ -74,12 +75,13 @@ scrape_configs:
           environment: 'production'
           server_name: '181.214.10.246'
           os: 'debian'
-      - targets:
-          - '192.168.1.178'
-        labels:
-          environment: 'production'
-          server_name: 'Tahseel'
-          os: 'debian'
+      # Tasheel ICMP target disabled:
+      # - targets:
+      #     - '192.168.1.178'
+      #   labels:
+      #     environment: 'production'
+      #     server_name: 'Tahseel'
+      #     os: 'debian'
       - targets:
           - '8.8.8.8'
         labels:
@@ -279,8 +281,9 @@ scrape_configs:
       - targets:
           - '181.214.10.246:9100'
           - '181.214.10.246:8000'
-      - targets:
-          - '192.168.1.178:9100'
+      # Tasheel TCP probe disabled:
+      # - targets:
+      #     - '192.168.1.178:9100'
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

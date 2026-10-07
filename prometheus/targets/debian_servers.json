@@ -138,15 +138,5 @@
       "server_name": "dsouth-ocube-custom-report",
       "os": "debian"
     }
-  },
-  {
-    "targets": ["192.168.160.214:9100"],
-    "labels": {
-      "environment": "production",
-      "cluster": "dubai_south",
-      "site": "dubai-south",
-      "server_name": "dsouth-ocube-transcript",
-      "os": "debian"
-    }
   }
 ]

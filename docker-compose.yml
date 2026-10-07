@@ -1,6 +1,9 @@
 networks:
   monitoring:
     driver: bridge
+  npm:
+    external: true
+    name: nginx-proxy-manager_default
 
 volumes:
   prometheus_data:
@@ -23,10 +26,10 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=15d'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
     networks:
       - monitoring
 
@@ -40,9 +43,11 @@ services:
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
+      - ./alertmanager/secrets/slack_api_url:/etc/alertmanager/secrets/slack_api_url:ro
+      - ./alertmanager/secrets/flock_webhook_url:/etc/alertmanager/secrets/flock_webhook_url:ro
     command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
     networks:
       - monitoring
 
@@ -73,13 +78,15 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.netdev'
-      - '--collector.netstat'
-      - '--collector.sockstat'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|var/lib/docker)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.netdev"
+      - "--collector.netstat"
+      - "--collector.sockstat"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|var/lib/docker)($$|/)"
+    profiles:
+      - optional
 
   custom-nginx-python-exporter:
     image: nginx-python:latest
@@ -87,12 +94,16 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    environment:
+      SERVER_NAME: nginx-proxy-manager
+      STUB_STATUS_URL: http://nginx-proxy-manager_app_1:8080/nginx_status
+      LOG_DIRECTORY: /var/log/nginx
+      SCRAPE_INTERVAL: "2"
     volumes:
-      - /var/log/nginx:/var/log/nginx:ro
+      - /opt/docker/nginx-proxy-manager/data/logs:/var/log/nginx:ro
     networks:
       - monitoring
+      - npm
 
   blackbox-exporter:
     image: prom/blackbox-exporter:v0.25.0
@@ -101,9 +112,9 @@ services:
     ports:
       - "9115:9115"
     volumes:
-      - ./blackbox/blackbox.yml:/etc/blackboxexporter/config.yml
+      - ./blackbox/blackbox.yml:/etc/blackboxexporter/config.yml:ro
     command:
-      - '--config.file=/etc/blackboxexporter/config.yml'
+      - "--config.file=/etc/blackboxexporter/config.yml"
     cap_add:
       - NET_RAW
     networks:

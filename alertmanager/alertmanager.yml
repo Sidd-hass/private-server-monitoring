@@ -1,18 +1,18 @@
 global:
   resolve_timeout: 5m
-  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
 
 route:
   group_by: ['alertname', 'server_name', 'instance']
-  group_wait: 0s         # Send new incoming alerts immediately (no initial delay)
-  group_interval: 10s    # Send any newly triggered alerts almost instantly
-  repeat_interval: 15m   # Repeat notifications every 15 minutes if the alert remains firing
+  group_wait: 0s
+  group_interval: 10s
+  repeat_interval: 15m
   receiver: 'combined-notifications'
 
 receivers:
   - name: 'combined-notifications'
     slack_configs:
-      - channel: '#prometheus-alerts' # Match your Slack channel name
+      - channel: '#prometheus-alerts'
         send_resolved: true
         title: '{{ if eq .Status "firing" }}🔥 [FIRING:{{ .Alerts.Firing | len }}] {{ else }}✅ [RESOLVED] {{ end }}{{ .CommonLabels.alertname }}'
         text: >-
@@ -23,5 +23,5 @@ receivers:
             *Instance:* `{{ .Labels.instance }}`
           {{ end }}
     webhook_configs:
-      - url: '${FLOCK_WEBHOOK_URL}'
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
         send_resolved: true
