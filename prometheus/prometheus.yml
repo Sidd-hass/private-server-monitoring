@@ -36,6 +36,8 @@ scrape_configs:
       - files:
           - '/etc/prometheus/targets/*.json'
         refresh_interval: 1m
+    # Fleet targets, including UCPIN, UCDEMO, and UCPMED, are registered in
+    # targets/debian_servers.json and inherit cluster/server labels for Grafana.
 
   # - job_name: 'haproxy_tasheel'
   #   static_configs:

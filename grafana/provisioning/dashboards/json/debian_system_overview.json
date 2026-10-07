@@ -18,6 +18,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
+  "description": "Debian server fleet overview. Cluster and server selectors are populated from Prometheus labels, including UCPIN, UCDEMO, and UCPMED.",
   "links": [],
   "liveNow": false,
   "panels": [
@@ -1228,7 +1229,10 @@
     "debian",
     "monitoring",
     "servers",
-    "clusters"
+    "clusters",
+    "ucpin",
+    "ucdemo",
+    "ucpmed"
   ],
   "templating": {
     "list": [

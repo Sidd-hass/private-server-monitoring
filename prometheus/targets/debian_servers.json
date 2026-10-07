@@ -1,5 +1,75 @@
 [
   {
+    "targets": ["151.243.12.57:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpin",
+      "site": "ucpin",
+      "server_name": "ucpin11",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["151.243.12.59:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpin",
+      "site": "ucpin",
+      "server_name": "ucpin12",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["151.243.12.60:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpin",
+      "site": "ucpin",
+      "server_name": "ucpin13",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["181.214.10.237:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucdemo",
+      "site": "ucdemo",
+      "server_name": "uc11",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["181.214.10.238:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucdemo",
+      "site": "ucdemo",
+      "server_name": "uc12",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["143.14.172.231:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpmed",
+      "site": "ucpmed",
+      "server_name": "ucpmed01",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["143.14.172.232:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpmed",
+      "site": "ucpmed",
+      "server_name": "ucpmed02",
+      "os": "debian"
+    }
+  },
+  {
     "targets": ["192.168.99.46:9100"],
     "labels": {
       "environment": "production",
