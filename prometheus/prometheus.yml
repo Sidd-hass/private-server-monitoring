@@ -92,6 +92,63 @@ scrape_configs:
           environment: 'production'
           server_name: '8.8.8.8'
           os: 'external'
+      # UCPIN, UCDEMO, and UCPMED public endpoints (no VPN is listed for these sites).
+      - targets:
+          - '151.243.12.57'
+        labels:
+          environment: 'production'
+          cluster: 'ucpin'
+          site: 'ucpin'
+          server_name: 'ucpin11'
+          os: 'debian'
+      - targets:
+          - '151.243.12.59'
+        labels:
+          environment: 'production'
+          cluster: 'ucpin'
+          site: 'ucpin'
+          server_name: 'ucpin12'
+          os: 'debian'
+      - targets:
+          - '151.243.12.60'
+        labels:
+          environment: 'production'
+          cluster: 'ucpin'
+          site: 'ucpin'
+          server_name: 'ucpin13'
+          os: 'debian'
+      - targets:
+          - '181.214.10.237'
+        labels:
+          environment: 'production'
+          cluster: 'ucdemo'
+          site: 'ucdemo'
+          server_name: 'uc11'
+          os: 'debian'
+      - targets:
+          - '181.214.10.238'
+        labels:
+          environment: 'production'
+          cluster: 'ucdemo'
+          site: 'ucdemo'
+          server_name: 'uc12'
+          os: 'debian'
+      - targets:
+          - '143.14.172.231'
+        labels:
+          environment: 'production'
+          cluster: 'ucpmed'
+          site: 'ucpmed'
+          server_name: 'ucpmed01'
+          os: 'debian'
+      - targets:
+          - '143.14.172.232'
+        labels:
+          environment: 'production'
+          cluster: 'ucpmed'
+          site: 'ucpmed'
+          server_name: 'ucpmed02'
+          os: 'debian'
       # meydan/OCube hosts and gateways; probes need a route inside the cluster.
       - targets:
           - '192.168.99.46'
@@ -124,6 +181,14 @@ scrape_configs:
           cluster: 'meydan'
           site: 'ocube'
           server_name: 'my04'
+          os: 'debian'
+      - targets:
+          - '192.168.99.175'
+        labels:
+          environment: 'production'
+          cluster: 'meydan'
+          site: 'ocube'
+          server_name: 'meydan-custom-report-server'
           os: 'debian'
       # Shams servers reached over the OpenVPN-routed private subnet.
       - targets:

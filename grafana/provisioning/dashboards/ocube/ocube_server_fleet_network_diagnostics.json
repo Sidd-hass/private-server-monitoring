@@ -90,7 +90,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_success{job=\"blackbox_ping\",server_name=~\"$server\"}",
+          "expr": "probe_success{job=\"blackbox_ping\",cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\"}",
           "instant": true,
           "legendFormat": "{{server_name}} -> {{instance}}",
           "refId": "A"
@@ -159,7 +159,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping\",phase=\"rtt\",server_name=~\"$server\"} * 1000",
+          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping\",phase=\"rtt\",cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\"} * 1000",
           "instant": true,
           "legendFormat": "{{server_name}} -> {{instance}}",
           "refId": "A"
@@ -220,7 +220,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_network_receive_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) * 8",
+          "expr": "sum(rate(node_network_receive_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) * 8",
           "instant": true,
           "legendFormat": "Inbound Bandwidth — {{server_name}}",
           "refId": "A"
@@ -281,7 +281,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_network_transmit_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) * 8",
+          "expr": "sum(rate(node_network_transmit_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) * 8",
           "instant": true,
           "legendFormat": "Outbound Bandwidth — {{server_name}}",
           "refId": "A"
@@ -372,7 +372,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) * 8",
+          "expr": "rate(node_network_receive_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) * 8",
           "legendFormat": "{{server_name}} - {{device}} - Receive Bandwidth",
           "refId": "A"
         },
@@ -382,7 +382,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) * 8",
+          "expr": "rate(node_network_transmit_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) * 8",
           "legendFormat": "{{server_name}} - {{device}} - Transmit Bandwidth",
           "refId": "B"
         }
@@ -476,7 +476,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping\",phase=\"rtt\",server_name=~\"$server\"} * 1000",
+          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping\",phase=\"rtt\",cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\"} * 1000",
           "legendFormat": "{{server_name}} -> {{instance}} - Ping RTT",
           "refId": "A"
         }
@@ -569,7 +569,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_network_receive_drop_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) + rate(node_network_transmit_drop_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)",
+          "expr": "sum(rate(node_network_receive_drop_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) + rate(node_network_transmit_drop_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)",
           "legendFormat": "{{server_name}} - Packet Drops",
           "refId": "A"
         },
@@ -579,7 +579,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_network_receive_errs_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) + rate(node_network_transmit_errs_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)",
+          "expr": "sum(rate(node_network_receive_errs_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m]) + rate(node_network_transmit_errs_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)",
           "legendFormat": "{{server_name}} - Packet Errors",
           "refId": "B"
         }
@@ -672,7 +672,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "node_netstat_Tcp_CurrEstab{server_name=~\"$server\"}",
+          "expr": "node_netstat_Tcp_CurrEstab{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\"}",
           "legendFormat": "{{server_name}} - Established Connections",
           "refId": "A"
         },
@@ -682,7 +682,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "node_sockstat_TCP_alloc{server_name=~\"$server\"}",
+          "expr": "node_sockstat_TCP_alloc{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\"}",
           "legendFormat": "{{server_name}} - Allocated Sockets",
           "refId": "B"
         },
@@ -692,7 +692,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "node_sockstat_TCP_tw{server_name=~\"$server\"}",
+          "expr": "node_sockstat_TCP_tw{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\"}",
           "legendFormat": "{{server_name}} - Time-Wait Sockets",
           "refId": "C"
         }
@@ -765,7 +765,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "(sum(rate(node_network_receive_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) + sum(rate(node_network_transmit_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)) * 8",
+          "expr": "(sum(rate(node_network_receive_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) + sum(rate(node_network_transmit_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name)) * 8",
           "legendFormat": "{{server_name}} - Total Network Bandwidth",
           "refId": "A"
         },
@@ -775,7 +775,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_network_receive_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) * 8",
+          "expr": "sum(rate(node_network_receive_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) * 8",
           "legendFormat": "{{server_name}} - Inbound Bandwidth",
           "refId": "B"
         },
@@ -785,7 +785,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_network_transmit_bytes_total{server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) * 8",
+          "expr": "sum(rate(node_network_transmit_bytes_total{cluster=~\"^(meydan|shams|dubai_south|spc)$\",server_name=~\"$server\",device!~\"lo|docker.*|br-.*|veth.*|tun.*\"}[1m])) by (server_name) * 8",
           "legendFormat": "{{server_name}} - Outbound Bandwidth",
           "refId": "C"
         }
@@ -860,7 +860,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_success{job=\"blackbox_ping_meydan\",server_name=~\"freeswitch-gateway|sbc-gateway\"}",
+          "expr": "probe_success{cluster=\"meydan\",job=\"blackbox_ping_meydan\",server_name=~\"freeswitch-gateway|sbc-gateway\"}",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "refId": "A"
@@ -950,7 +950,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping_meydan\",phase=\"rtt\",server_name=~\"freeswitch-gateway|sbc-gateway\"} * 1000",
+          "expr": "probe_icmp_duration_seconds{cluster=\"meydan\",job=\"blackbox_ping_meydan\",phase=\"rtt\",server_name=~\"freeswitch-gateway|sbc-gateway\"} * 1000",
           "legendFormat": "{{server_name}} — {{instance}}",
           "refId": "A"
         }
@@ -1025,7 +1025,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_success{job=\"blackbox_ping_dubai_south\",server_name=\"gsm-gateway-ds\"}",
+          "expr": "probe_success{cluster=\"dubai_south\",job=\"blackbox_ping_dubai_south\",server_name=\"gsm-gateway-ds\"}",
           "instant": true,
           "legendFormat": "{{server_name}}",
           "refId": "A"
@@ -1115,7 +1115,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping_dubai_south\",phase=\"rtt\",server_name=\"gsm-gateway-ds\"} * 1000",
+          "expr": "probe_icmp_duration_seconds{cluster=\"dubai_south\",job=\"blackbox_ping_dubai_south\",phase=\"rtt\",server_name=\"gsm-gateway-ds\"} * 1000",
           "legendFormat": "{{server_name}} — {{instance}}",
           "refId": "A"
         }
@@ -1132,7 +1132,8 @@
     "prometheus",
     "server",
     "bandwidth",
-    "throughput"
+    "throughput",
+    "ocube"
   ],
   "templating": {
     "list": [
@@ -1149,7 +1150,7 @@
           "type": "prometheus",
           "uid": "Prometheus"
         },
-        "definition": "label_values(probe_success{job=\"blackbox_ping\"}, server_name)",
+        "definition": "label_values(probe_success{job=\"blackbox_ping\",cluster=~\"^(meydan|shams|dubai_south|spc)$\"}, server_name)",
         "hide": 0,
         "includeAll": true,
         "label": "Server",
@@ -1157,7 +1158,7 @@
         "name": "server",
         "options": [],
         "query": {
-          "query": "label_values(probe_success{job=\"blackbox_ping\"}, server_name)",
+          "query": "label_values(probe_success{job=\"blackbox_ping\",cluster=~\"^(meydan|shams|dubai_south|spc)$\"}, server_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -1174,8 +1175,9 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Server Fleet Network Diagnostics",
-  "uid": "server-fleet-network-diagnostics",
-  "version": 9,
-  "weekStart": ""
+  "title": "OCube Server Fleet Network Diagnostics",
+  "uid": "ocube-server-fleet-network-diagnostics",
+  "version": 1,
+  "weekStart": "",
+  "description": "Network diagnostics for OCube servers in Meydan, Shams, Dubai South, and SPC."
 }
