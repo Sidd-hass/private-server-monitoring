@@ -73,7 +73,7 @@
     "targets": ["192.168.99.46:9100"],
     "labels": {
       "environment": "production",
-      "cluster": "medan",
+      "cluster": "meydan",
       "site": "ocube",
       "server_name": "my01",
       "os": "debian"
@@ -83,7 +83,7 @@
     "targets": ["192.168.99.47:9100"],
     "labels": {
       "environment": "production",
-      "cluster": "medan",
+      "cluster": "meydan",
       "site": "ocube",
       "server_name": "my02",
       "os": "debian"
@@ -93,7 +93,7 @@
     "targets": ["192.168.99.42:9100"],
     "labels": {
       "environment": "production",
-      "cluster": "medan",
+      "cluster": "meydan",
       "site": "ocube",
       "server_name": "my03",
       "os": "debian"
@@ -103,9 +103,19 @@
     "targets": ["192.168.99.40:9100"],
     "labels": {
       "environment": "production",
-      "cluster": "medan",
+      "cluster": "meydan",
       "site": "ocube",
       "server_name": "my04",
+      "os": "debian"
+    }
+  },
+  {
+    "targets": ["192.168.99.175:9100"],
+    "labels": {
+      "environment": "production",
+      "cluster": "meydan",
+      "site": "ocube",
+      "server_name": "meydan-custom-report-server",
       "os": "debian"
     }
   },

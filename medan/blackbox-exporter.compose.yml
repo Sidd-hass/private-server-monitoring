@@ -1,7 +1,7 @@
 services:
   blackbox-exporter:
     image: prom/blackbox-exporter:v0.25.0
-    container_name: medan-blackbox-exporter
+    container_name: meydan-blackbox-exporter
     restart: unless-stopped
     network_mode: host
     cap_add:

@@ -92,12 +92,12 @@ scrape_configs:
           environment: 'production'
           server_name: '8.8.8.8'
           os: 'external'
-      # Medan/OCube hosts and gateways; probes need a route inside the cluster.
+      # meydan/OCube hosts and gateways; probes need a route inside the cluster.
       - targets:
           - '192.168.99.46'
         labels:
           environment: 'production'
-          cluster: 'medan'
+          cluster: 'meydan'
           site: 'ocube'
           server_name: 'my01'
           os: 'debian'
@@ -105,7 +105,7 @@ scrape_configs:
           - '192.168.99.47'
         labels:
           environment: 'production'
-          cluster: 'medan'
+          cluster: 'meydan'
           site: 'ocube'
           server_name: 'my02'
           os: 'debian'
@@ -113,7 +113,7 @@ scrape_configs:
           - '192.168.99.42'
         labels:
           environment: 'production'
-          cluster: 'medan'
+          cluster: 'meydan'
           site: 'ocube'
           server_name: 'my03'
           os: 'debian'
@@ -121,7 +121,7 @@ scrape_configs:
           - '192.168.99.40'
         labels:
           environment: 'production'
-          cluster: 'medan'
+          cluster: 'meydan'
           site: 'ocube'
           server_name: 'my04'
           os: 'debian'
@@ -225,7 +225,7 @@ scrape_configs:
         replacement: blackbox-exporter:9115
 
   # Gateway ICMP probes originate from my02, which can route to the private gateway subnet.
-  - job_name: 'blackbox_ping_medan'
+  - job_name: 'blackbox_ping_meydan'
     metrics_path: /probe
     params:
       module: [icmp_ping]
@@ -233,14 +233,14 @@ scrape_configs:
       - targets: ['172.21.2.17']
         labels:
           environment: 'production'
-          cluster: 'medan'
+          cluster: 'meydan'
           site: 'ocube'
           server_name: 'freeswitch-gateway'
           os: 'gateway'
       - targets: ['172.21.2.14']
         labels:
           environment: 'production'
-          cluster: 'medan'
+          cluster: 'meydan'
           site: 'ocube'
           server_name: 'sbc-gateway'
           os: 'gateway'

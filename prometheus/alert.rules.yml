@@ -64,19 +64,19 @@ groups:
           summary: "Server Down: {{ $labels.server_name }} ({{ $labels.instance }})"
           description: "Debian server OS target {{ $labels.server_name }} ({{ $labels.instance }}) is unreachable."
 
-  - name: medan_gateway_alerts
+  - name: meydan_gateway_alerts
     rules:
-      - alert: MedanGatewayUnreachable
+      - alert: meydanGatewayUnreachable
         expr: |
-          (probe_success{job="blackbox_ping_medan", cluster="medan"} == 0)
+          (probe_success{job="blackbox_ping_meydan", cluster="meydan"} == 0)
           or
-          (up{job="blackbox_ping_medan", cluster="medan"} == 0)
+          (up{job="blackbox_ping_meydan", cluster="meydan"} == 0)
         for: 0s
         labels:
           severity: critical
         annotations:
-          summary: "Medan gateway unreachable: {{ $labels.server_name }}"
-          description: "The ICMP probe for {{ $labels.server_name }} ({{ $labels.instance }}) has failed, or Prometheus cannot scrape the Medan Blackbox Exporter, for at least 1 minute."
+          summary: "meydan gateway unreachable: {{ $labels.server_name }}"
+          description: "The ICMP probe for {{ $labels.server_name }} ({{ $labels.instance }}) has failed, or Prometheus cannot scrape the meydan Blackbox Exporter, for at least 1 minute."
 
   - name: custom_nginx_alerts
     rules:
