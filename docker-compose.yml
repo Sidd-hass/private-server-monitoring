@@ -1,9 +1,9 @@
 networks:
   monitoring:
     driver: bridge
-  # npm:
-  #   external: true
-  #   name: nginx-proxy-manager_default
+  npm:
+    external: true
+    name: nginx-proxy-manager_default
 
 volumes:
   prometheus_data:
@@ -103,7 +103,7 @@ services:
       - /opt/docker/nginx-proxy-manager/data/logs:/var/log/nginx:ro
     networks:
       - monitoring
-      # - npm
+      - npm
 
   blackbox-exporter:
     image: prom/blackbox-exporter:v0.25.0
