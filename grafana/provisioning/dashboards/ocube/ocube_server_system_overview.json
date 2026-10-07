@@ -858,7 +858,7 @@
           "refId": "StandardVariableQuery"
         },
         "includeAll": true,
-        "allValue": ".*",
+        "allValue": "^(meydan|shams|dubai_south|spc)$",
         "multi": false,
         "refresh": 2,
         "sort": 1,
