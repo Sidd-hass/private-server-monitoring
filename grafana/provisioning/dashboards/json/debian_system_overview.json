@@ -102,10 +102,10 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "up{job=\"debian_servers\", server_name=~\"$server\"}",
+          "expr": "up{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
           "instant": true,
-          "legendFormat": "{{server_name}}",
           "range": false,
+          "legendFormat": "{{cluster}} - {{server_name}}",
           "refId": "A"
         }
       ],
@@ -165,10 +165,10 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "time() - node_boot_time_seconds{server_name=~\"$server\"}",
+          "expr": "time() - node_boot_time_seconds{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "instant": true,
-          "legendFormat": "{{server_name}}",
           "range": false,
+          "legendFormat": "{{cluster}} - {{server_name}}",
           "refId": "A"
         }
       ],
@@ -236,10 +236,10 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "100 - (avg by (server_name) (rate(node_cpu_seconds_total{mode=\"idle\", server_name=~\"$server\"}[5m])) * 100)",
+          "expr": "100 - (avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"idle\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100)",
           "instant": true,
-          "legendFormat": "{{server_name}}",
           "range": false,
+          "legendFormat": "{{cluster}} - {{server_name}}",
           "refId": "A"
         }
       ],
@@ -307,10 +307,10 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "(1 - (node_memory_MemAvailable_bytes{server_name=~\"$server\"} / node_memory_MemTotal_bytes{server_name=~\"$server\"})) * 100",
+          "expr": "(1 - (node_memory_MemAvailable_bytes{cluster=~\"$cluster\",server_name=~\"$server\"} / node_memory_MemTotal_bytes{cluster=~\"$cluster\",server_name=~\"$server\"})) * 100",
           "instant": true,
-          "legendFormat": "{{server_name}}",
           "range": false,
+          "legendFormat": "{{cluster}} - {{server_name}}",
           "refId": "A"
         }
       ],
@@ -378,10 +378,10 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\", server_name=~\"$server\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/\", server_name=~\"$server\"})",
+          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"})",
           "instant": true,
-          "legendFormat": "{{server_name}}",
           "range": false,
+          "legendFormat": "{{cluster}} - {{server_name}}",
           "refId": "A"
         }
       ],
@@ -444,8 +444,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "100 - (avg by (server_name) (rate(node_cpu_seconds_total{mode=\"idle\", server_name=~\"$server\"}[5m])) * 100)",
-          "legendFormat": "CPU Busy Total (%) - {{server_name}}",
+          "expr": "100 - (avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"idle\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100)",
+          "legendFormat": "CPU Busy Total (%) - {{cluster}} - {{server_name}}",
           "refId": "A"
         },
         {
@@ -453,8 +453,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{mode=\"user\", server_name=~\"$server\"}[5m])) * 100",
-          "legendFormat": "User (%) - {{server_name}}",
+          "expr": "avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"user\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100",
+          "legendFormat": "User (%) - {{cluster}} - {{server_name}}",
           "refId": "B"
         },
         {
@@ -462,8 +462,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{mode=\"system\", server_name=~\"$server\"}[5m])) * 100",
-          "legendFormat": "System (%) - {{server_name}}",
+          "expr": "avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"system\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100",
+          "legendFormat": "System (%) - {{cluster}} - {{server_name}}",
           "refId": "C"
         },
         {
@@ -471,8 +471,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "avg by (server_name) (rate(node_cpu_seconds_total{mode=\"iowait\", server_name=~\"$server\"}[5m])) * 100",
-          "legendFormat": "I/O Wait (%) - {{server_name}}",
+          "expr": "avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"iowait\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100",
+          "legendFormat": "I/O Wait (%) - {{cluster}} - {{server_name}}",
           "refId": "D"
         }
       ],
@@ -519,8 +519,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_load1{server_name=~\"$server\"}",
-          "legendFormat": "Load 1m - {{server_name}}",
+          "expr": "node_load1{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Load 1m - {{cluster}} - {{server_name}}",
           "refId": "A"
         },
         {
@@ -528,8 +528,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_load5{server_name=~\"$server\"}",
-          "legendFormat": "Load 5m - {{server_name}}",
+          "expr": "node_load5{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Load 5m - {{cluster}} - {{server_name}}",
           "refId": "B"
         },
         {
@@ -537,8 +537,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_load15{server_name=~\"$server\"}",
-          "legendFormat": "Load 15m - {{server_name}}",
+          "expr": "node_load15{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Load 15m - {{cluster}} - {{server_name}}",
           "refId": "C"
         }
       ],
@@ -604,8 +604,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_MemTotal_bytes{server_name=~\"$server\"} - node_memory_MemAvailable_bytes{server_name=~\"$server\"}",
-          "legendFormat": "Used - {{server_name}}",
+          "expr": "node_memory_MemTotal_bytes{cluster=~\"$cluster\",server_name=~\"$server\"} - node_memory_MemAvailable_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Used - {{cluster}} - {{server_name}}",
           "refId": "A"
         },
         {
@@ -613,8 +613,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_Cached_bytes{server_name=~\"$server\"}",
-          "legendFormat": "Cached - {{server_name}}",
+          "expr": "node_memory_Cached_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Cached - {{cluster}} - {{server_name}}",
           "refId": "B"
         },
         {
@@ -622,8 +622,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_Buffers_bytes{server_name=~\"$server\"}",
-          "legendFormat": "Buffers - {{server_name}}",
+          "expr": "node_memory_Buffers_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Buffers - {{cluster}} - {{server_name}}",
           "refId": "C"
         },
         {
@@ -631,8 +631,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "node_memory_MemFree_bytes{server_name=~\"$server\"}",
-          "legendFormat": "Free - {{server_name}}",
+          "expr": "node_memory_MemFree_bytes{cluster=~\"$cluster\",server_name=~\"$server\"}",
+          "legendFormat": "Free - {{cluster}} - {{server_name}}",
           "refId": "D"
         }
       ],
@@ -681,8 +681,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_disk_read_bytes_total{server_name=~\"$server\"}[5m])",
-          "legendFormat": "Read (B/s) - {{device}} - {{server_name}}",
+          "expr": "rate(node_disk_read_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+          "legendFormat": "Read (B/s) - {{device}} - {{cluster}} - {{server_name}}",
           "refId": "A"
         },
         {
@@ -690,8 +690,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_disk_written_bytes_total{server_name=~\"$server\"}[5m])",
-          "legendFormat": "Write (B/s) - {{device}} - {{server_name}}",
+          "expr": "rate(node_disk_written_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+          "legendFormat": "Write (B/s) - {{device}} - {{cluster}} - {{server_name}}",
           "refId": "B"
         }
       ],
@@ -752,8 +752,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_receive_bytes_total{server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
-          "legendFormat": "Inbound (Receive) - {{device}} - {{server_name}}",
+          "expr": "rate(node_network_receive_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
+          "legendFormat": "Inbound (Receive) - {{device}} - {{cluster}} - {{server_name}}",
           "refId": "A"
         },
         {
@@ -761,8 +761,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_transmit_bytes_total{server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
-          "legendFormat": "Outbound (Transmit) - {{device}} - {{server_name}}",
+          "expr": "rate(node_network_transmit_bytes_total{cluster=~\"$cluster\",server_name=~\"$server\", device!~\"lo|docker.*|veth.*\"}[5m])",
+          "legendFormat": "Outbound (Transmit) - {{device}} - {{cluster}} - {{server_name}}",
           "refId": "B"
         }
       ],
@@ -776,15 +776,15 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
           "custom": {
             "drawStyle": "bars",
             "fillOpacity": 40,
             "lineWidth": 1
           },
-          "unit": "pps"
+          "unit": "pps",
+          "color": {
+            "mode": "palette-classic"
+          }
         },
         "overrides": []
       },
@@ -814,8 +814,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_receive_drop_total{server_name=~\"$server\"}[5m]) + rate(node_network_transmit_drop_total{server_name=~\"$server\"}[5m])",
-          "legendFormat": "Packet Drops (Total/sec) - {{device}} - {{server_name}}",
+          "expr": "rate(node_network_receive_drop_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) + rate(node_network_transmit_drop_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+          "legendFormat": "Packet Drops (Total/sec) - {{device}} - {{cluster}} - {{server_name}}",
           "refId": "A"
         },
         {
@@ -823,8 +823,8 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "rate(node_network_receive_errs_total{server_name=~\"$server\"}[5m]) + rate(node_network_transmit_errs_total{server_name=~\"$server\"}[5m])",
-          "legendFormat": "Errors (Total/sec) - {{device}} - {{server_name}}",
+          "expr": "rate(node_network_receive_errs_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) + rate(node_network_transmit_errs_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+          "legendFormat": "Errors (Total/sec) - {{device}} - {{cluster}} - {{server_name}}",
           "refId": "B"
         }
       ],
@@ -910,8 +910,8 @@
           "editorMode": "code",
           "expr": "100 * (1 - (node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"} / node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}))",
           "instant": true,
-          "legendFormat": "{{server_name}} /u2_nas",
           "range": false,
+          "legendFormat": "{{server_name}} /u2_nas",
           "refId": "A"
         }
       ],
@@ -975,8 +975,8 @@
           "editorMode": "code",
           "expr": "node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
           "instant": true,
-          "legendFormat": "{{server_name}} free",
           "range": false,
+          "legendFormat": "{{server_name}} free",
           "refId": "A"
         }
       ],
@@ -1062,8 +1062,8 @@
           "editorMode": "code",
           "expr": "count(node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}) or vector(0)",
           "instant": true,
-          "legendFormat": "{{server_name}}",
           "range": false,
+          "legendFormat": "{{server_name}}",
           "refId": "A"
         }
       ],
@@ -1147,8 +1147,8 @@
           "editorMode": "code",
           "expr": "sum(ALERTS{alertname=~\"Nas.*\",server_name=\"Tahseel\",alertstate=\"firing\"}) or vector(0)",
           "instant": true,
-          "legendFormat": "NAS alerts",
           "range": false,
+          "legendFormat": "NAS alerts",
           "refId": "A"
         }
       ],
@@ -1201,8 +1201,8 @@
           "editorMode": "code",
           "expr": "node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"} - node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
           "instant": false,
-          "legendFormat": "{{server_name}} used",
           "range": true,
+          "legendFormat": "{{server_name}} used",
           "refId": "A"
         },
         {
@@ -1213,8 +1213,8 @@
           "editorMode": "code",
           "expr": "node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
           "instant": false,
-          "legendFormat": "{{server_name}} free",
           "range": true,
+          "legendFormat": "{{server_name}} free",
           "refId": "B"
         }
       ],
@@ -1227,33 +1227,58 @@
   "tags": [
     "debian",
     "monitoring",
-    "servers"
+    "servers",
+    "clusters"
   ],
   "templating": {
     "list": [
       {
-        "allValue": ".*",
-        "current": {},
+        "name": "cluster",
+        "label": "Cluster",
+        "type": "query",
         "datasource": {
           "type": "prometheus",
           "uid": "Prometheus"
         },
-        "definition": "label_values(up{job=\"debian_servers\"}, server_name)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Debian Server",
-        "multi": false,
-        "name": "server",
-        "options": [],
+        "definition": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
         "query": {
-          "query": "label_values(up{job=\"debian_servers\"}, server_name)",
+          "query": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
         "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
         "sort": 1,
-        "type": "query"
+        "hide": 0,
+        "current": {},
+        "options": [],
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "server",
+        "label": "Server",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "Prometheus"
+        },
+        "definition": "label_values(up{job=\"debian_servers\", cluster=~\"$cluster\"}, server_name)",
+        "query": {
+          "query": "label_values(up{job=\"debian_servers\", cluster=~\"$cluster\"}, server_name)",
+          "refId": "StandardVariableQuery"
+        },
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "hide": 0,
+        "current": {},
+        "options": [],
+        "regex": "",
+        "skipUrlSync": false
       }
     ]
   },
@@ -1265,5 +1290,5 @@
   "timezone": "browser",
   "title": "Debian Server Fleet Overview",
   "uid": "debian-fleet-overview",
-  "version": 3
+  "version": 5
 }

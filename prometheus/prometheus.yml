@@ -17,11 +17,13 @@ scrape_configs:
       - targets: ['181.214.10.244:9100']
         labels:
           environment: 'production'
+          cluster: 'multicomm'
           server_name: '181.214.10.244'
           os: 'debian'
       - targets: ['181.214.10.246:9100']
         labels:
           environment: 'production'
+          cluster: 'multicomm'
           server_name: '181.214.10.246'
           os: 'debian'
       # Tasheel node-exporter target disabled:
