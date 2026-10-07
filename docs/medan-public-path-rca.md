@@ -1,6 +1,7 @@
 # RCA: Public-path Medan monitoring coverage gap
 
 **Investigation date:** 6 October 2026  
+**Follow-up configuration update:** 7 October 2026  
 **Scope:** Monitoring from the central Prometheus stack through Medan public SSH endpoints, plus discovery from `my01` toward Medan and the Shams, SPC, and Dubai South networks.  
 **Status:** Public-path discovery and connectivity evidence collected. The inter-site network cause is narrowed to routing/firewall/return-path reachability, but the exact Fortinet rule or route has not been inspected, so the network-layer root cause is not yet isolated to a specific configuration item.
 
@@ -22,6 +23,7 @@ The **Medan Public Path Resilience** dashboard screenshot showed:
 | `my02` public SSH TCP endpoint | DOWN | TCP connection to `94.206.56.71:11447` did not succeed from the probe location at that time. |
 | `my01` / `my02` SSH tunnel metrics | NO METRICS | No successful Prometheus scrape samples were present for the configured local tunnel targets. |
 | Public path interface charts | No data | These charts depend on Node Exporter samples through the SSH tunnels. |
+| Public IP ICMP ping | Added as a follow-up Prometheus job on 7 October; live results not yet confirmed. | Measures ICMP response/RTT independently of the VPN if the public host/provider allows ping. |
 
 The public-port panel is an availability check for SSH, not a login test or a metrics test. The tunnel scrape definitions point to `host.docker.internal:19101` and `:19102`; persistent SSH forwards and their local listeners must be installed and reachable before those jobs can return metrics. The investigation did not verify running `autossh` services or active tunnel listeners.
 
@@ -132,7 +134,10 @@ destination-side evidence was supplied.
 | Capability | Current evidence/status | Coverage boundary |
 | --- | --- | --- |
 | Public SSH-port availability | my01 endpoint was UP; my02 endpoint was DOWN in the screenshot. | Tests only TCP port reachability from the Blackbox probe host. |
+| Public IP ping | `blackbox_public_ping` job is now configured in the repository for both public IPs. | Not yet confirmed in the running Prometheus instance; ICMP may be filtered even when SSH works. |
+| Discovered-device ping via my01 | A Blackbox relay tunnel and file-SD snapshot of 92 Nmap responders are configured in the repository. | Not yet confirmed live; the target list is a 6 October snapshot and new devices require a refreshed inventory. |
 | Full metrics for my01/my02 over public SSH | Tunnel metrics showed NO METRICS. Tunnel listeners/services were not verified. | Needs working persistent SSH forwards and Node Exporter reachable on the corresponding Medan host. |
+| Host directory usage | A textfile collector and hourly low-priority timer are provided for top-level root-filesystem directories. | Must be installed on each server and the Node Exporter textfile collector redeployed; not yet live-verified. |
 | Local Medan device discovery | Nmap reported 92 IPs up across `.99/24` and `.228/24`; five reverse-DNS names returned. | A point-in-time scan; responders may block probes, and names require DNS/inventory records. |
 | Monitoring of other `.99/24` hosts | The Prometheus file-SD registry includes my01, my02, my03, and my04 Node Exporter targets. | Configuration presence is not proof the central Prometheus scrape is currently healthy. |
 | Shams, SPC, Dubai South metrics/ICMP from my01 | Representative ping, trace, and SSH tests failed to establish reachability. | Cannot discover or relay those sites from my01 until routing/firewall/return path works. |
@@ -162,20 +167,21 @@ Nmap discovery.
    my01/my02 to their Node Exporter endpoints. Keep tunnel listener ports
    reachable only from the Prometheus Docker network. Confirm the tunnel
    targets become healthy before relying on the public-path dashboard.
-4. **Choose a site-probe relay.** Once site routing works, run Blackbox probes
-   on a Medan host that can reach the remote subnets and securely expose/relay
-   only the probe metrics to central Prometheus. For full host metrics, ensure
-   each managed server runs Node Exporter (or an approved equivalent) and
-   configure a reachable scrape/relay path.
+4. **Deploy the Medan discovery relay.** Deploy Blackbox Exporter on my01,
+   enable its public SSH tunnel to central Prometheus, and scrape the 92-host
+   Nmap snapshot. Refresh the snapshot after approved discovery scans. For
+   full host metrics, ensure each managed server runs Node Exporter (or an
+   approved equivalent) and configure a reachable scrape/relay path.
 5. **Build a named inventory.** Correlate IPs with Fortinet DHCP leases,
    reverse-DNS records, Aruba/device controllers, Proxmox, Synology, and
    application/device management systems. Keep discovered IP, confirmed
    hostname, owner/site, device role, and monitored ports as separate fields.
 6. **Acceptance criteria.** Demonstrate (a) my01 and my02 public SSH checks,
-   (b) both public tunnel scrapes healthy, (c) ping/TCP probes from the relay
-   to approved targets in each site subnet, and (d) Node Exporter samples for
-   each server intended for full host monitoring. Record an explicit exception
-   for devices that block ICMP or do not expose host metrics.
+   (b) public Node Exporter tunnels healthy, (c) the my01 Blackbox relay
+   pinging the discovered Medan devices, (d) Node Exporter host and directory
+   metrics for each intended Linux server, and (e) SNMP/vendor metrics for
+   network devices selected for interface monitoring. Record explicit
+   exceptions for devices that block ICMP or do not expose metrics.
 
 ## Evidence limitations
 
@@ -185,4 +191,6 @@ Nmap discovery.
 - The pasted Nmap runs did not include a saved XML output or port/service
   inventory. The 92-host result is discovery response, not proof that all
   devices are stable, uniquely named, or approved for metrics collection.
+  On the directly attached `.99/24`, Nmap can report hosts from ARP discovery;
+  this does not guarantee they will answer ICMP from the Blackbox ping panel.
 - No credentials, passwords, or private keys are included in this report.

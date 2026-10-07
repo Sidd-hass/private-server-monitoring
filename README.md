@@ -162,14 +162,21 @@ Once you log into Grafana at `http://<SERVER_IP>:3000`, open **Dashboards -> Obs
 ## Public-side Medan collection
 
 The `blackbox_public_ssh` job checks the public SSH endpoints for Medan `my01`
-and `my02` independently of the VPN. The `medan_public_ssh_tunnel` scrape job
+and `my02` independently of the VPN. The `blackbox_public_ping` job separately
+checks ICMP reachability and latency for those public IPs. The
+`medan_public_ssh_tunnel` scrape job
 can collect full Node Exporter metrics over persistent SSH local forwards,
 including when VPN routing is unavailable. It requires an authorized SSH key,
 verified host keys, and local tunnel ports reachable only from the Prometheus
-Docker network. The **Medan Public Path Resilience** dashboard shows public SSH
-port availability, tunnel scrape status, and host interface traffic, errors,
-and drops. See [docs/public-medan-monitoring.md](docs/public-medan-monitoring.md)
-for the inventory mapping, setup requirements, and tunnel commands.
+Docker network. Node Exporter also exposes top-level directory sizes through
+the optional textfile collector and hourly systemd timer. A Blackbox
+Exporter tunnel from my01 probes the dated 92-device Nmap snapshot. The
+**Medan Public Server and Network Monitoring** dashboard shows server CPU,
+memory, root disk, uptime, load, directory usage, network traffic/errors,
+public IP ping, and the discovered-device ping table. ICMP can be filtered by
+the host or provider, so the SSH TCP check remains a separate signal. See
+[docs/public-medan-monitoring.md](docs/public-medan-monitoring.md)
+for the inventory, deployment requirements, and device-metrics boundary.
 
 This public fallback currently covers only `my01` and `my02`; other private
 Medan hosts and the Shams, Dubai South, and SPC networks continue to use their

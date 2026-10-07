@@ -318,6 +318,54 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
+  # Public ICMP reachability of Medan servers, independent of VPN routing.
+  # A failed probe can also mean the host/provider filters ICMP.
+  - job_name: 'blackbox_public_ping'
+    metrics_path: /probe
+    params:
+      module: [icmp_ping]
+    static_configs:
+      - targets: ['94.206.56.70']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my01'
+          collection_path: 'public_ip'
+      - targets: ['94.206.56.71']
+        labels:
+          environment: 'production'
+          cluster: 'medan'
+          site: 'ocube'
+          server_name: 'my02'
+          collection_path: 'public_ip'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Ping the Medan discovery snapshot from a Blackbox Exporter running on my01.
+  # Its HTTP endpoint is carried to Prometheus over the public SSH tunnel.
+  - job_name: 'blackbox_medan_devices_public'
+    scrape_interval: 30s
+    metrics_path: /probe
+    params:
+      module: [icmp_ping]
+    file_sd_configs:
+      - files:
+          - '/etc/prometheus/targets/medan_devices/*.json'
+        refresh_interval: 5m
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: host.docker.internal:19115
+
   # Full OS/network metrics via persistent SSH local forwards on the Docker
   # host. See docs/public-medan-monitoring.md before enabling these targets.
   - job_name: 'medan_public_ssh_tunnel'

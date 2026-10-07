@@ -64,14 +64,127 @@
       ],
       "title": "Host Interface Errors and Drops via Public SSH",
       "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"options": {"0": {"text": "NO PING REPLY", "color": "red"}, "1": {"text": "PING REPLY", "color": "green"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 26},
+      "id": 5,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "probe_success{job=\"blackbox_public_ping\"}", "instant": true, "legendFormat": "{{server_name}} — {{instance}}", "refId": "A"}],
+      "title": "Public IP Ping Status",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26},
+      "id": 6,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "probe_icmp_duration_seconds{job=\"blackbox_public_ping\",phase=\"rtt\"} * 1000", "legendFormat": "{{server_name}} RTT", "refId": "A"}],
+      "title": "Public IP Ping Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 34},
+      "id": 7,
+      "options": {"colorMode": "value", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "100 * (1 - avg by (server_name) (rate(node_cpu_seconds_total{job=\"medan_public_ssh_tunnel\",mode=\"idle\"}[5m])))", "instant": true, "legendFormat": "{{server_name}}", "refId": "A"}],
+      "title": "CPU Utilization",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 75}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 34},
+      "id": 8,
+      "options": {"colorMode": "value", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"medan_public_ssh_tunnel\"} / node_memory_MemTotal_bytes{job=\"medan_public_ssh_tunnel\"})", "instant": true, "legendFormat": "{{server_name}}", "refId": "A"}],
+      "title": "Memory Used",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 75}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 34},
+      "id": 9,
+      "options": {"colorMode": "value", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "100 * (1 - max by (server_name) (node_filesystem_avail_bytes{job=\"medan_public_ssh_tunnel\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{job=\"medan_public_ssh_tunnel\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"}))", "instant": true, "legendFormat": "{{server_name}} root /", "refId": "A"}],
+      "title": "Root Disk Used",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 34},
+      "id": 10,
+      "options": {"colorMode": "none", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "node_time_seconds{job=\"medan_public_ssh_tunnel\"} - node_boot_time_seconds{job=\"medan_public_ssh_tunnel\"}", "instant": true, "legendFormat": "{{server_name}}", "refId": "A"}],
+      "title": "Server Uptime",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40},
+      "id": 11,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "node_load1{job=\"medan_public_ssh_tunnel\"}", "legendFormat": "{{server_name}} 1m", "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "node_load5{job=\"medan_public_ssh_tunnel\"}", "legendFormat": "{{server_name}} 5m", "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "node_load15{job=\"medan_public_ssh_tunnel\"}", "legendFormat": "{{server_name}} 15m", "refId": "C"}
+      ],
+      "title": "System Load via Public SSH",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"custom": {"align": "auto", "displayMode": "auto", "inspect": false}}, "overrides": []},
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 48},
+      "id": 12,
+      "options": {"cellHeight": "sm", "showHeader": true, "sortBy": [{"displayName": "Value", "desc": true}]},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "probe_success{job=\"blackbox_medan_devices_public\"}", "format": "table", "instant": true, "legendFormat": "{{server_name}}", "refId": "A"}],
+      "title": "Discovered Medan Devices — Current Ping Status (Nmap Snapshot 2026-10-06)",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 5}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 60},
+      "id": 13,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "topk(10, probe_icmp_duration_seconds{job=\"blackbox_medan_devices_public\",phase=\"rtt\"} * 1000)", "legendFormat": "{{server_name}} ({{instance}})", "refId": "A"}],
+      "title": "10 Highest Current Device Ping Latencies",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "description": "Top-level directories on each server's root filesystem. Generated by the directory-usage timer hourly; other mounted filesystems are tracked separately.",
+      "fieldConfig": {"defaults": {"unit": "bytes", "custom": {"align": "auto", "displayMode": "auto", "inspect": false}}, "overrides": []},
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 68},
+      "id": 14,
+      "options": {"cellHeight": "sm", "showHeader": true, "sortBy": [{"displayName": "Value", "desc": true}]},
+      "targets": [{"datasource": {"type": "prometheus", "uid": "Prometheus"}, "editorMode": "code", "expr": "node_directory_size_bytes{job=\"medan_public_ssh_tunnel\"}", "format": "table", "instant": true, "legendFormat": "{{server_name}} {{directory}}", "refId": "A"}],
+      "title": "Top-Level Directory Disk Usage by Server",
+      "type": "table"
     }
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["medan", "network", "resilience", "public-ssh"],
+  "tags": ["medan", "network", "resilience", "public-ssh", "server-stats", "device-discovery"],
   "time": {"from": "now-6h", "to": "now"},
   "timezone": "",
-  "title": "Medan Public Path Resilience",
+  "title": "Medan Public Server and Network Monitoring",
   "uid": "medan-public-resilience",
   "version": 1
 }

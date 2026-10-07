@@ -10,5 +10,7 @@ services:
       - '--path.sysfs=/host/sys'
       - '--path.rootfs=/host'
       - '--web.listen-address=${NODE_EXPORTER_LISTEN_ADDRESS:?Set this host private IP in .env}'
+      - '--collector.textfile.directory=/textfile'
     volumes:
       - '/:/host:ro,rslave'
+      - '/var/lib/node_exporter/textfile_collector:/textfile:ro'

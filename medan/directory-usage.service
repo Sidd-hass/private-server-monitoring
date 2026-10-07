@@ -1,0 +1,14 @@
+[Unit]
+Description=Collect top-level directory disk usage for Node Exporter
+After=local-fs.target
+
+[Service]
+Type=oneshot
+Environment=NODE_TEXTFILE_DIRECTORY=/var/lib/node_exporter/textfile_collector
+ExecStart=/usr/local/sbin/collect-directory-usage.sh
+User=root
+Nice=19
+IOSchedulingClass=idle
+TimeoutStartSec=20min
+ProtectSystem=full
+ProtectHome=read-only

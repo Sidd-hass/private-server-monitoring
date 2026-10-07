@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh Node Exporter directory usage metrics hourly
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+AccuracySec=1min
+Persistent=true
+Unit=directory-usage.service
+
+[Install]
+WantedBy=timers.target

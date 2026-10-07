@@ -1,0 +1,15 @@
+[Unit]
+Description=Public SSH tunnel to Medan my02 Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/medan-public-tunnels
+Environment=AUTOSSH_GATETIME=0
+ExecStart=/usr/bin/autossh -M 0 -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -o UserKnownHostsFile=${SSH_KNOWN_HOSTS} -i ${SSH_KEY} -p 11447 -L ${TUNNEL_BIND}:19102:192.168.99.47:9100 root@94.206.56.71
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
