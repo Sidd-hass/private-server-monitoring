@@ -1370,7 +1370,7 @@
   "templating": {
     "list": [
       {
-        "allValue": ".*",
+        "allValue": "meydan|shams|dubai_south|spc",
         "current": {
           "selected": true,
           "text": [
@@ -1443,6 +1443,6 @@
   "timezone": "browser",
   "title": "Public & Private Infrastructure Availability",
   "uid": "pub-priv-infra",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
