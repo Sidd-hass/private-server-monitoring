@@ -78,6 +78,28 @@ groups:
           summary: "meydan gateway unreachable: {{ $labels.server_name }}"
           description: "The ICMP probe for {{ $labels.server_name }} ({{ $labels.instance }}) has failed, or Prometheus cannot scrape the meydan Blackbox Exporter, for at least 1 minute."
 
+  - name: ping_probe_alerts
+    rules:
+      - alert: PublicPingDown
+        expr: probe_success{job="blackbox_ping_public", cluster=~"meydan|shams|dubai_south|spc"} == 0
+        for: 0s
+        labels:
+          severity: critical
+          probe_type: public
+        annotations:
+          summary: "Public ping DOWN: {{ $labels.cluster }} / {{ $labels.server_name }}"
+          description: "The public IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.public_ip }}) has failed."
+
+      - alert: PrivatePingDown
+        expr: probe_success{job="blackbox_ping", cluster=~"meydan|shams|dubai_south|spc"} == 0
+        for: 0s
+        labels:
+          severity: critical
+          probe_type: private
+        annotations:
+          summary: "Private ping DOWN: {{ $labels.cluster }} / {{ $labels.server_name }}"
+          description: "The private IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.instance }}) has failed."
+
   - name: custom_nginx_alerts
     rules:
       - alert: CustomNginxExporterDown
