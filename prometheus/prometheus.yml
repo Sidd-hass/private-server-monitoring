@@ -338,6 +338,456 @@ scrape_configs:
       - target_label: __address__
         replacement: 192.168.160.6:9115
 
+  # public probes for the ocube cluster
+
+    # ============================================================
+  # PUBLIC ICMP - MEYDAN / SHAMS / DUBAI SOUTH / SPC
+  # ============================================================
+
+  - job_name: 'blackbox_ping_public'
+
+    metrics_path: /probe
+
+    params:
+      module: [icmp_ping]
+
+    static_configs:
+
+      # ========================================================
+      # MEYDAN
+      # ========================================================
+
+      - targets:
+          - '94.206.56.70'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my01'
+          public_ip: '94.206.56.70'
+          private_ip: '192.168.99.46'
+          os: 'debian'
+
+      - targets:
+          - '91.72.120.82'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my02'
+          public_ip: '91.72.120.82'
+          private_ip: '192.168.99.47'
+          os: 'debian'
+
+      - targets:
+          - '91.72.120.83'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my03'
+          public_ip: '91.72.120.83'
+          private_ip: '192.168.99.42'
+          os: 'debian'
+
+      - targets:
+          - '91.72.120.84'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my04'
+          public_ip: '91.72.120.84'
+          private_ip: '192.168.99.40'
+          os: 'debian'
+
+      - targets:
+          - '14.195.189.86'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'freeswitch-gateway'
+          public_ip: '14.195.189.86'
+          private_ip: '172.21.2.17'
+          os: 'gateway'
+
+      # Shared public IP with my01
+      - targets:
+          - '94.206.56.70'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'meydan-custom-report-server'
+          public_ip: '94.206.56.70'
+          private_ip: '192.168.99.175'
+          os: 'debian'
+
+
+      # ========================================================
+      # SHAMS
+      # ========================================================
+
+      - targets:
+          - '94.205.197.125'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'shams'
+          cluster: 'shams'
+          server_name: 'shams-uc01'
+          public_ip: '94.205.197.125'
+          private_ip: '172.16.125.40'
+          os: 'debian'
+
+      - targets:
+          - '94.205.197.126'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'shams'
+          cluster: 'shams'
+          server_name: 'shams-uc02'
+          public_ip: '94.205.197.126'
+          private_ip: '172.16.125.41'
+          os: 'debian'
+
+      # Shared public IP with shams-uc01
+      - targets:
+          - '94.205.197.125'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'shams'
+          cluster: 'shams'
+          server_name: 'shams-custom-reporting-server'
+          public_ip: '94.205.197.125'
+          private_ip: '172.16.125.44'
+          os: 'debian'
+
+
+      # ========================================================
+      # DUBAI SOUTH
+      # ========================================================
+
+      - targets:
+          - '91.72.107.250'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'dubai-south'
+          cluster: 'dubai_south'
+          server_name: 'ds01'
+          public_ip: '91.72.107.250'
+          private_ip: '192.168.160.6'
+          os: 'debian'
+
+      - targets:
+          - '91.72.107.251'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'dubai-south'
+          cluster: 'dubai_south'
+          server_name: 'ds02'
+          public_ip: '91.72.107.251'
+          private_ip: '192.168.160.7'
+          os: 'debian'
+
+      # Shared public IP according to supplied inventory
+      - targets:
+          - '91.72.107.250'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'dubai-south'
+          cluster: 'dubai_south'
+          server_name: 'dsouth-ocube-custom-report'
+          public_ip: '91.72.107.250'
+          private_ip: '192.168.160.21'
+          os: 'debian'
+
+      # Shared public IP according to supplied inventory
+      - targets:
+          - '91.72.107.250'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'dubai-south'
+          cluster: 'dubai_south'
+          server_name: 'dsouth-ocube-transcript'
+          public_ip: '91.72.107.250'
+          private_ip: '192.168.160.21'
+          os: 'debian'
+
+
+      # ========================================================
+      # SPC
+      # ========================================================
+
+      - targets:
+          - '91.72.107.141'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-sj01'
+          public_ip: '91.72.107.141'
+          private_ip: '172.16.200.102'
+          os: 'debian'
+
+      - targets:
+          - '91.72.107.142'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-sj02'
+          public_ip: '91.72.107.142'
+          private_ip: '172.16.200.103'
+          os: 'debian'
+
+      - targets:
+          - '91.72.107.140'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-sj03'
+          public_ip: '91.72.107.140'
+          private_ip: '172.16.200.104'
+          os: 'debian'
+
+      # Shared public IP according to supplied inventory
+      - targets:
+          - '91.72.107.142'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-custom-reporting-server'
+          public_ip: '91.72.107.142'
+          private_ip: '172.16.200.106'
+          os: 'debian'
+
+
+    relabel_configs:
+
+      - source_labels: [__address__]
+        target_label: __param_target
+
+      - source_labels: [__param_target]
+        target_label: instance
+
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+
+  # ============================================================
+  # PUBLIC TCP / NODE EXPORTER
+  #
+  # IMPORTANT:
+  # Only unique public IPs assigned to the main servers are
+  # included here.
+  #
+  # Shared public IPs used by custom report servers cannot
+  # uniquely identify the internal server through TCP/9100.
+  # ============================================================
+
+  - job_name: 'blackbox_tcp_public'
+
+    metrics_path: /probe
+
+    params:
+      module: [tcp_connect]
+
+    static_configs:
+
+      # --------------------------------------------------------
+      # MEYDAN
+      # --------------------------------------------------------
+
+      - targets:
+          - '94.206.56.70:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my01'
+          public_ip: '94.206.56.70'
+          private_ip: '192.168.99.46'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '91.72.120.82:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my02'
+          public_ip: '91.72.120.82'
+          private_ip: '192.168.99.47'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '91.72.120.83:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my03'
+          public_ip: '91.72.120.83'
+          private_ip: '192.168.99.42'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '91.72.120.84:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'meydan'
+          cluster: 'meydan'
+          server_name: 'my04'
+          public_ip: '91.72.120.84'
+          private_ip: '192.168.99.40'
+          service: 'node-exporter'
+          port: '9100'
+
+
+      # --------------------------------------------------------
+      # SHAMS
+      # --------------------------------------------------------
+
+      - targets:
+          - '94.205.197.125:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'shams'
+          cluster: 'shams'
+          server_name: 'shams-uc01'
+          public_ip: '94.205.197.125'
+          private_ip: '172.16.125.40'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '94.205.197.126:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'shams'
+          cluster: 'shams'
+          server_name: 'shams-uc02'
+          public_ip: '94.205.197.126'
+          private_ip: '172.16.125.41'
+          service: 'node-exporter'
+          port: '9100'
+
+
+      # --------------------------------------------------------
+      # DUBAI SOUTH
+      # --------------------------------------------------------
+
+      - targets:
+          - '91.72.107.250:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'dubai-south'
+          cluster: 'dubai_south'
+          server_name: 'ds01'
+          public_ip: '91.72.107.250'
+          private_ip: '192.168.160.6'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '91.72.107.251:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'dubai-south'
+          cluster: 'dubai_south'
+          server_name: 'ds02'
+          public_ip: '91.72.107.251'
+          private_ip: '192.168.160.7'
+          service: 'node-exporter'
+          port: '9100'
+
+
+      # --------------------------------------------------------
+      # SPC
+      # --------------------------------------------------------
+
+      - targets:
+          - '91.72.107.141:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-sj01'
+          public_ip: '91.72.107.141'
+          private_ip: '172.16.200.102'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '91.72.107.142:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-sj02'
+          public_ip: '91.72.107.142'
+          private_ip: '172.16.200.103'
+          service: 'node-exporter'
+          port: '9100'
+
+      - targets:
+          - '91.72.107.140:9100'
+        labels:
+          environment: 'production'
+          monitoring_layer: 'public'
+          site: 'spc'
+          cluster: 'spc'
+          server_name: 'spc-sj03'
+          public_ip: '91.72.107.140'
+          private_ip: '172.16.200.104'
+          service: 'node-exporter'
+          port: '9100'
+
+
+    relabel_configs:
+
+      - source_labels: [__address__]
+        target_label: __param_target
+
+      - source_labels: [__param_target]
+        target_label: instance
+
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   # TCP port probes
   - job_name: 'blackbox_tcp'
     metrics_path: /probe
