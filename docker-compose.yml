@@ -23,6 +23,7 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - ./prometheus/loki.log.yml:/etc/prometheus/loki.log.yml:ro
       - ./prometheus/targets:/etc/prometheus/targets:ro
       - prometheus_data:/prometheus
     extra_hosts:
