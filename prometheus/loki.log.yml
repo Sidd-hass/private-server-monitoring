@@ -1,0 +1,90 @@
+# Loki ruler rules (LogQL). Place at ./loki/rules/log-alerts.yml
+# Mounted inside Loki as /etc/loki/rules/fake/log-alerts.yml ("fake" = tenant id when auth_enabled: false)
+groups:
+  - name: system_log_alerts
+    rules:
+      - alert: LogsSilentHost
+        # Host sent logs earlier in the last hour but nothing in the last 10 minutes.
+        expr: |
+          sum by (server_name) (count_over_time({server_name=~".+"}[1h] offset 10m))
+          unless
+          sum by (server_name) (count_over_time({server_name=~".+"}[10m]))
+        for: 0s
+        labels:
+          severity: warning
+          source: logs
+        annotations:
+          summary: "No logs from {{ $labels.server_name }}"
+          description: "{{ $labels.server_name }} was sending logs but has been silent for 10 minutes. Check Alloy and connectivity on that host."
+
+      - alert: JournalCritical
+        expr: sum by (server_name) (count_over_time({job="system", priority=~"crit|critical|alert|emerg|emergency"}[5m])) > 0
+        for: 0s
+        labels:
+          severity: critical
+          source: logs
+        annotations:
+          summary: "Critical journal entries on {{ $labels.server_name }}"
+          description: "{{ $value | printf \"%.0f\" }} journal entries at crit/alert/emerg priority in the last 5 minutes on {{ $labels.server_name }}."
+
+      - alert: JournalErrorBurst
+        expr: sum by (server_name) (count_over_time({job="system", priority=~"err|error"}[5m])) > 20
+        for: 5m
+        labels:
+          severity: warning
+          source: logs
+        annotations:
+          summary: "Journal error burst on {{ $labels.server_name }}"
+          description: "{{ $value | printf \"%.0f\" }} error-level journal entries in 5 minutes on {{ $labels.server_name }}."
+
+      - alert: KernelOomKill
+        expr: sum by (server_name) (count_over_time({job="system"} |~ "(?i)(out of memory|oom-kill|oom_reaper|killed process)" [5m])) > 0
+        for: 0s
+        labels:
+          severity: critical
+          source: logs
+        annotations:
+          summary: "OOM kill on {{ $labels.server_name }}"
+          description: "The kernel killed a process for lack of memory on {{ $labels.server_name }} in the last 5 minutes."
+
+      - alert: SystemdUnitFailed
+        expr: sum by (server_name) (count_over_time({job="system"} |~ "(?i)(failed with result|entered failed state)" [5m])) > 0
+        for: 0s
+        labels:
+          severity: warning
+          source: logs
+        annotations:
+          summary: "systemd unit failure on {{ $labels.server_name }}"
+          description: "A systemd unit reported failure on {{ $labels.server_name }} in the last 5 minutes. Check the Journal Live Tail panel."
+
+      - alert: SshAuthFailures
+        expr: sum by (server_name) (count_over_time({job="system"} |~ "(?i)(failed password|authentication failure|invalid user)" [5m])) > 20
+        for: 0s
+        labels:
+          severity: warning
+          source: logs
+        annotations:
+          summary: "Many failed SSH logins on {{ $labels.server_name }}"
+          description: "{{ $value | printf \"%.0f\" }} failed authentication entries in 5 minutes on {{ $labels.server_name }}. Possible brute-force attempt."
+
+  - name: container_log_alerts
+    rules:
+      - alert: DockerErrorBurst
+        expr: sum by (server_name, container_name) (count_over_time({job="docker"} |~ "(?i)(error|exception|failed)" [5m])) > 50
+        for: 5m
+        labels:
+          severity: warning
+          source: logs
+        annotations:
+          summary: "Error burst in container {{ $labels.container_name }} on {{ $labels.server_name }}"
+          description: "{{ $value | printf \"%.0f\" }} error-like log lines in 5 minutes from {{ $labels.container_name }} on {{ $labels.server_name }}."
+
+      - alert: DockerFatalOrPanic
+        expr: sum by (server_name, container_name) (count_over_time({job="docker"} |~ "(?i)(panic|fatal|segfault|traceback)" [5m])) > 0
+        for: 0s
+        labels:
+          severity: critical
+          source: logs
+        annotations:
+          summary: "Fatal/panic in container {{ $labels.container_name }} on {{ $labels.server_name }}"
+          description: "{{ $labels.container_name }} on {{ $labels.server_name }} logged a panic, fatal error, segfault or traceback in the last 5 minutes."

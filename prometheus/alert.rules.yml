@@ -146,3 +146,45 @@ groups:
         annotations:
           summary: "High Active Nginx Connections on {{ $labels.server_name }}"
           description: "Active connections reached {{ $value }} on {{ $labels.server_name }} ({{ $labels.instance }})."
+
+  # ---------------------------------------------------------------------------
+  # Log pipeline health (Loki + Alloy). These are metric alerts, so Prometheus
+  # evaluates them. Needs the "loki" and "alloy" scrape jobs in prometheus.yml.
+  # ---------------------------------------------------------------------------
+  - name: log_pipeline_alerts
+    rules:
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Loki is down on {{ $labels.server_name }}"
+          description: "Prometheus cannot scrape Loki ({{ $labels.instance }}). Log ingestion and the System-Wide Log Observatory dashboard are affected."
+
+      - alert: AlloyDown
+        expr: up{job="alloy"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alloy log collector is down on {{ $labels.server_name }}"
+          description: "Prometheus cannot scrape Alloy ({{ $labels.instance }}). No new logs are being shipped from this host."
+
+      - alert: AlloyDroppingLogs
+        expr: sum by (instance, server_name) (rate(loki_write_dropped_entries_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alloy is dropping log entries on {{ $labels.server_name }}"
+          description: "Alloy ({{ $labels.instance }}) is dropping {{ $value | printf \"%.2f\" }} entries/sec because Loki is rejecting or not accepting them."
+
+      - alert: LokiServerErrors
+        expr: sum by (instance, route) (rate(loki_request_duration_seconds_count{status_code=~"5.."}[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki is returning 5xx errors on {{ $labels.route }}"
+          description: "Loki ({{ $labels.instance }}) has returned server errors on route {{ $labels.route }} for 5 minutes."

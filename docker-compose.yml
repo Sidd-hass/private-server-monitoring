@@ -9,6 +9,8 @@ volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
+  loki_data:
+  alloy_data:
 
 services:
   prometheus:
@@ -119,3 +121,34 @@ services:
       - NET_RAW
     networks:
       - monitoring
+
+  loki:
+    image: grafana/loki:3.5.8
+    container_name: loki
+    restart: unless-stopped
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/loki
+    networks:
+      - monitoring
+
+  alloy:
+    image: grafana/alloy:v1.11.3
+    container_name: alloy
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy_data:/var/lib/alloy/data
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - monitoring
+    depends_on:
+      - loki
