@@ -100,6 +100,61 @@ groups:
           summary: "Private ping DOWN: {{ $labels.cluster }} / {{ $labels.server_name }}"
           description: "The private IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.instance }}) has failed."
 
+  # ---------------------------------------------------------------------------
+  # SIP trunks (fonouc_freeswitch_trunk), from scripts/freeswitch_trunk_metrics.sh
+  # via each trunk node's node_exporter textfile collector.
+  # Registration state is deliberately not an alert label: a state change
+  # (FAIL_WAIT -> TRYING) would otherwise resolve and re-fire the alert.
+  # "Active" trunk nodes = nodes that reported a gateway in the last 24h, so
+  # standby nodes (ds01, Meydan gw) never alert.
+  # ---------------------------------------------------------------------------
+  - name: sip_trunk_alerts
+    rules:
+      - alert: SipTrunkDown
+        # SPC du_ae_trunk (065100200) has been FAIL_WAIT since before monitoring;
+        # excluded until dev confirms whether it is still in use.
+        expr: |
+          (freeswitch_gateway_up == 0)
+          unless on(server_name, gateway)
+          freeswitch_gateway_up{server_name="spc-sj02", gateway="du_ae_trunk"}
+        for: 2m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "SIP trunk DOWN: {{ $labels.cluster }} / {{ $labels.gateway }} ({{ $labels.number }})"
+          description: "Trunk {{ $labels.gateway }} (DU number {{ $labels.number }}) on {{ $labels.server_name }} has not been registered (FreeSWITCH Status DOWN) for 2 minutes. Calls through this trunk are failing."
+
+      - alert: SipTrunkContainerDown
+        expr: trunk_container_running == 0 and on(instance) count by (instance) (max_over_time(freeswitch_gateway_up[1d]))
+        for: 1m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "Trunk container stopped: {{ $labels.cluster }} / {{ $labels.server_name }}"
+          description: "fonouc_freeswitch_trunk is not running on {{ $labels.server_name }} ({{ $labels.instance }}), which carried a trunk in the last 24 hours. All trunks on this node are down."
+
+      - alert: SipTrunkFreeswitchNotAnswering
+        expr: freeswitch_trunk_scrape_ok == 0 and on(instance) (trunk_container_running == 1) and on(instance) count by (instance) (max_over_time(freeswitch_gateway_up[1d]))
+        for: 2m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "Trunk FreeSWITCH not answering: {{ $labels.cluster }} / {{ $labels.server_name }}"
+          description: "fonouc_freeswitch_trunk is running on {{ $labels.server_name }} but fs_cli on ESL 8023 has not answered for 2 minutes. Trunk status cannot be read."
+
+      - alert: SipTrunkMetricsStale
+        expr: time() - node_textfile_mtime_seconds{file=~".*freeswitch_trunk.prom"} > 300
+        for: 2m
+        labels:
+          severity: warning
+          alert_type: trunk
+        annotations:
+          summary: "Trunk metrics stale on {{ $labels.cluster }} / {{ $labels.server_name }}"
+          description: "freeswitch_trunk.prom on {{ $labels.server_name }} has not been updated for {{ $value | humanizeDuration }}. Check the fs_trunk_metrics cron job (journalctl -u cron)."
+
   - name: custom_nginx_alerts
     rules:
       - alert: CustomNginxExporterDown
@@ -146,3 +201,45 @@ groups:
         annotations:
           summary: "High Active Nginx Connections on {{ $labels.server_name }}"
           description: "Active connections reached {{ $value }} on {{ $labels.server_name }} ({{ $labels.instance }})."
+
+  # ---------------------------------------------------------------------------
+  # Log pipeline health (Loki + Alloy). These are metric alerts, so Prometheus
+  # evaluates them. Needs the "loki" and "alloy" scrape jobs in prometheus.yml.
+  # ---------------------------------------------------------------------------
+  - name: log_pipeline_alerts
+    rules:
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Loki is down on {{ $labels.server_name }}"
+          description: "Prometheus cannot scrape Loki ({{ $labels.instance }}). Log ingestion and the System-Wide Log Observatory dashboard are affected."
+
+      - alert: AlloyDown
+        expr: up{job="alloy"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alloy log collector is down on {{ $labels.server_name }}"
+          description: "Prometheus cannot scrape Alloy ({{ $labels.instance }}). No new logs are being shipped from this host."
+
+      - alert: AlloyDroppingLogs
+        expr: sum by (instance, server_name) (rate(loki_write_dropped_entries_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alloy is dropping log entries on {{ $labels.server_name }}"
+          description: "Alloy ({{ $labels.instance }}) is dropping {{ $value | printf \"%.2f\" }} entries/sec because Loki is rejecting or not accepting them."
+
+      - alert: LokiServerErrors
+        expr: sum by (instance, route) (rate(loki_request_duration_seconds_count{status_code=~"5.."}[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki is returning 5xx errors on {{ $labels.route }}"
+          description: "Loki ({{ $labels.instance }}) has returned server errors on route {{ $labels.route }} for 5 minutes."
