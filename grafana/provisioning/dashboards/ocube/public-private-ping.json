@@ -24,12 +24,29 @@
   "liveNow": false,
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "Prometheus"
       },
+      "description": "Public IP ICMP probes answering vs failing. Many sites block ICMP on the public edge, so a failing public probe with a healthy private probe usually means a firewall, not an outage.",
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -43,20 +60,45 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
+        "h": 5,
+        "w": 4,
         "x": 0,
-        "y": 0
+        "y": 1
       },
-      "id": 1,
+      "id": 31,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -65,7 +107,11 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 34
+        },
+        "textMode": "value_and_name",
         "wideLayout": true
       },
       "pluginVersion": "10.4.0",
@@ -76,66 +122,12 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"}) or vector(0)",
-          "instant": false,
-          "range": true,
+          "expr": "count(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"} == 1) or vector(0)",
+          "instant": true,
+          "legendFormat": "Up",
+          "range": false,
           "refId": "A"
-        }
-      ],
-      "title": "Public IPs UP",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
@@ -143,12 +135,13 @@
           },
           "editorMode": "code",
           "expr": "count(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"} == 0) or vector(0)",
-          "instant": false,
-          "range": true,
-          "refId": "A"
+          "instant": true,
+          "legendFormat": "Down",
+          "range": false,
+          "refId": "B"
         }
       ],
-      "title": "Public IPs DOWN",
+      "title": "Public IPs",
       "type": "stat"
     },
     {
@@ -156,8 +149,12 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
+      "description": "Private IP ICMP probes (over OpenVPN / site relays) answering vs failing.",
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -171,20 +168,45 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 0
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 1
       },
-      "id": 3,
+      "id": 32,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -193,7 +215,11 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "auto",
+        "text": {
+          "titleSize": 13,
+          "valueSize": 34
+        },
+        "textMode": "value_and_name",
         "wideLayout": true
       },
       "pluginVersion": "10.4.0",
@@ -204,13 +230,26 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"}) or vector(0)",
-          "instant": false,
-          "range": true,
+          "expr": "count(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"} == 1) or vector(0)",
+          "instant": true,
+          "legendFormat": "Up",
+          "range": false,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"} == 0) or vector(0)",
+          "instant": true,
+          "legendFormat": "Down",
+          "range": false,
+          "refId": "B"
         }
       ],
-      "title": "Private IPs UP",
+      "title": "Private IPs",
       "type": "stat"
     },
     {
@@ -218,9 +257,229 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
+      "description": "DU trunk gateways in fonouc_freeswitch_trunk whose Status is UP vs not UP (or metrics older than 3 minutes).",
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 33,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 34
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(freeswitch_gateway_up{cluster=~\"$cluster\",server_name=~\"$server\"} * on(instance) group_left() (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180) == 1) or vector(0)",
+          "instant": true,
+          "legendFormat": "Running",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(freeswitch_gateway_up{cluster=~\"$cluster\",server_name=~\"$server\"} * on(instance) group_left() (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180) == 0) or vector(0)",
+          "instant": true,
+          "legendFormat": "Down",
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "SIP Trunks",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "fonouc_freeswitch_trunk containers running and answering on ESL 8023 vs down on an active trunk node (standby nodes ignored).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 34,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 34
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count((min by (instance, cluster, server_name) (trunk_container_running{cluster=~\"$cluster\",server_name=~\"$server\"}) * on(instance) group_left() min by (instance) (freeswitch_trunk_scrape_ok) * on(instance) group_left() min by (instance) (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180)) == 1) or vector(0)",
+          "instant": true,
+          "legendFormat": "Running",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count((min by (instance, cluster, server_name) (trunk_container_running{cluster=~\"$cluster\",server_name=~\"$server\"}) * on(instance) group_left() min by (instance) (freeswitch_trunk_scrape_ok) * on(instance) group_left() min by (instance) (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180)) == 0 and on(instance) count by (instance) (max_over_time(freeswitch_gateway_up[1d]))) or vector(0)",
+          "instant": true,
+          "legendFormat": "Down",
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "Trunk Containers",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Average ICMP round-trip time across all private IP probes in the selection.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -230,26 +489,30 @@
                 "value": null
               },
               {
+                "color": "orange",
+                "value": 150
+              },
+              {
                 "color": "red",
-                "value": 1
+                "value": 300
               }
             ]
           },
-          "unit": "short"
+          "unit": "ms"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 0
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 1
       },
-      "id": 4,
+      "id": 35,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -259,7 +522,10 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "auto",
+        "text": {
+          "valueSize": 34
+        },
+        "textMode": "value",
         "wideLayout": true
       },
       "pluginVersion": "10.4.0",
@@ -270,13 +536,13 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "count(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"} == 0) or vector(0)",
+          "expr": "avg(probe_icmp_duration_seconds{job=~\"blackbox_ping|blackbox_ping_meydan\",phase=\"rtt\",cluster=~\"$cluster\",server_name=~\"$server\"}) * 1000",
           "instant": false,
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Private IPs DOWN",
+      "title": "Avg Private RTT",
       "type": "stat"
     },
     {
@@ -284,7 +550,692 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
-      "description": "One row per server. Public ping status next to the server's private IP and private ping status, matched on server_name; Private IP is the private probe's instance.",
+      "description": "The server whose root filesystem is most full. Orange from 70%, red from 85%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 36,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 34
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "topk(1, 100 * (1 - node_filesystem_avail_bytes{job=\"debian_servers\",mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"} / node_filesystem_size_bytes{job=\"debian_servers\",mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"}))",
+          "instant": true,
+          "legendFormat": "{{server_name}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Fullest Disk (/)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 18,
+      "panels": [],
+      "title": "SIP Trunks",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "One tile per SIP trunk gateway in the trunk container: RUNNING when the gateway Status is UP, DOWN otherwise or when the metrics are stale. If the trunk container itself is down its gateways cannot be read; see Trunk Container Status.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "✖ DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "✔ RUNNING"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 16,
+        "x": 0,
+        "y": 7
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 18
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sort(freeswitch_gateway_up{cluster=~\"$cluster\",server_name=~\"$server\"} * on(instance) group_left() (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "{{cluster}} / {{gateway}} ({{number}})",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Trunk Status",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "fonouc_freeswitch_trunk container per node: RUNNING when the container is up and answering on ESL 8023, DOWN when it is stopped, not answering, or the metrics are stale. Shows active trunk nodes plus any standby node where the container is running.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "✖ DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "✔ RUNNING"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 7
+      },
+      "id": 29,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 18
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(min by (instance, cluster, server_name) (trunk_container_running{cluster=~\"$cluster\",server_name=~\"$server\"}) * on(instance) group_left() min by (instance) (freeswitch_trunk_scrape_ok) * on(instance) group_left() min by (instance) (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180)) and on(instance) (count by (instance) (max_over_time(freeswitch_gateway_up[1d])) or count by (instance) (trunk_container_running == 1))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "{{cluster}} / {{server_name}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Trunk Container Status",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "One row per SIP trunk with its DID/number, registration state, proxy and uptime.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "✖ DOWN"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "✔ RUNNING"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^(Trunk|Container) Uptime$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 27,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Status"
+          }
+        ]
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (key, cluster, server_name, gateway, number, state, proxy) (label_join((freeswitch_gateway_up{cluster=~\"$cluster\",server_name=~\"$server\"} * on(instance) group_left() (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180)) * on(instance, gateway) group_left(state, proxy) freeswitch_gateway_info, \"key\", \"/\", \"server_name\", \"gateway\"))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (key) (label_join(freeswitch_gateway_uptime_seconds{cluster=~\"$cluster\",server_name=~\"$server\"}, \"key\", \"/\", \"server_name\", \"gateway\"))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (key) (label_join(freeswitch_gateway_up{cluster=~\"$cluster\",server_name=~\"$server\"} * 0 + on(instance) group_left() (time() - max by (instance) (trunk_container_start_time_seconds > 0)), \"key\", \"/\", \"server_name\", \"gateway\"))",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        }
+      ],
+      "title": "Trunk Details",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "key",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "cluster",
+                "server_name",
+                "gateway",
+                "number",
+                "state",
+                "proxy",
+                "Value #A",
+                "Value #B",
+                "Value #C"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value #A": 6,
+              "Value #B": 7,
+              "Value #C": 8,
+              "cluster": 0,
+              "gateway": 2,
+              "number": 3,
+              "proxy": 5,
+              "server_name": 1,
+              "state": 4
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Trunk Uptime",
+              "Value #C": "Container Uptime",
+              "cluster": "Site",
+              "gateway": "Trunk",
+              "number": "Number",
+              "proxy": "Proxy",
+              "server_name": "Server",
+              "state": "Registration"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "History of RUNNING / DOWN transitions for each SIP trunk.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "✖ DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "✔ RUNNING"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 23,
+      "options": {
+        "alignValue": "center",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "showValue": "never",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "freeswitch_gateway_up{cluster=~\"$cluster\",server_name=~\"$server\"} * on(instance) group_left() (time() - node_textfile_mtime_seconds{file=~\".*freeswitch_trunk.prom\"} < bool 180)",
+          "instant": false,
+          "legendFormat": "{{cluster}} / {{gateway}} ({{number}})",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Trunk Status Timeline",
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Calls per minute through each trunk. 'failed' includes busy / no-answer, so it is not by itself a trunk fault.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "calls / min",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, gateway, direction, result) (rate(freeswitch_gateway_calls_total{cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 60",
+          "instant": false,
+          "legendFormat": "{{cluster}} / {{gateway}} {{direction}} ({{result}})",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Trunk Calls per Minute",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 37,
+      "panels": [],
+      "title": "Server Health",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "One row per server: public and private ping, plus CPU (5m average), RAM in use and root disk usage from node_exporter. Gauges turn orange from 70% and red from 85%.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -300,12 +1251,12 @@
                 "0": {
                   "color": "red",
                   "index": 1,
-                  "text": "DOWN"
+                  "text": "✖ DOWN"
                 },
                 "1": {
                   "color": "green",
                   "index": 0,
-                  "text": "UP"
+                  "text": "✔ UP"
                 }
               },
               "type": "value"
@@ -360,6 +1311,66 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^(CPU|RAM|Disk \\(/\\))$"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": []
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 70
+                    },
+                    {
+                      "color": "red",
+                      "value": 85
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "gauge",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 140
+              }
+            ]
           }
         ]
       },
@@ -367,7 +1378,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 28
       },
       "id": 11,
       "options": {
@@ -413,9 +1424,45 @@
           "instant": true,
           "range": false,
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - avg by (server_name) (rate(node_cpu_seconds_total{job=\"debian_servers\",mode=\"idle\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]))) and on(server_name) max by (server_name) (probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - max by (server_name) (node_memory_MemAvailable_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}) / max by (server_name) (node_memory_MemTotal_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"})) and on(server_name) max by (server_name) (probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - max by (server_name) (node_filesystem_avail_bytes{job=\"debian_servers\",mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"}) / max by (server_name) (node_filesystem_size_bytes{job=\"debian_servers\",mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"})) and on(server_name) max by (server_name) (probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
         }
       ],
-      "title": "Public vs Private Diagnostic Matrix",
+      "title": "Server Health Matrix",
       "transformations": [
         {
           "id": "joinByField",
@@ -434,7 +1481,10 @@
                 "public_ip",
                 "instance",
                 "Value #A",
-                "Value #B"
+                "Value #B",
+                "Value #C",
+                "Value #D",
+                "Value #E"
               ]
             }
           }
@@ -447,6 +1497,9 @@
             "indexByName": {
               "Value #A": 4,
               "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
               "cluster": 0,
               "instance": 3,
               "public_ip": 2,
@@ -455,6 +1508,9 @@
             "renameByName": {
               "Value #A": "Public Ping",
               "Value #B": "Private Ping",
+              "Value #C": "CPU",
+              "Value #D": "RAM",
+              "Value #E": "Disk (/)",
               "cluster": "Site",
               "instance": "Private IP",
               "public_ip": "Public IP",
@@ -464,6 +1520,19 @@
         }
       ],
       "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 38,
+      "panels": [],
+      "title": "Reachability History",
+      "type": "row"
     },
     {
       "datasource": {
@@ -476,7 +1545,7 @@
             "mode": "thresholds"
           },
           "custom": {
-            "fillOpacity": 70,
+            "fillOpacity": 85,
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -491,11 +1560,13 @@
               "options": {
                 "0": {
                   "color": "red",
-                  "text": "DOWN"
+                  "index": 1,
+                  "text": "✖ DOWN"
                 },
                 "1": {
                   "color": "green",
-                  "text": "UP"
+                  "index": 0,
+                  "text": "✔ UP"
                 }
               },
               "type": "value"
@@ -518,22 +1589,22 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 13,
+        "h": 12,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 41
       },
       "id": 5,
       "options": {
-        "alignValue": "left",
+        "alignValue": "center",
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "mergeValues": true,
-        "rowHeight": 0.9,
-        "showValue": "auto",
+        "rowHeight": 0.8,
+        "showValue": "never",
         "tooltip": {
           "mode": "single",
           "sort": "none"
@@ -567,7 +1638,7 @@
             "mode": "thresholds"
           },
           "custom": {
-            "fillOpacity": 70,
+            "fillOpacity": 85,
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -582,11 +1653,13 @@
               "options": {
                 "0": {
                   "color": "red",
-                  "text": "DOWN"
+                  "index": 1,
+                  "text": "✖ DOWN"
                 },
                 "1": {
                   "color": "green",
-                  "text": "UP"
+                  "index": 0,
+                  "text": "✔ UP"
                 }
               },
               "type": "value"
@@ -609,22 +1682,22 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 13,
+        "h": 12,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 41
       },
       "id": 6,
       "options": {
-        "alignValue": "left",
+        "alignValue": "center",
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "mergeValues": true,
-        "rowHeight": 0.9,
-        "showValue": "auto",
+        "rowHeight": 0.8,
+        "showValue": "never",
         "tooltip": {
           "mode": "single",
           "sort": "none"
@@ -648,724 +1721,450 @@
       "type": "state-timeline"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 1,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 10,
-        "w": 12,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 29
+        "y": 53
       },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
+      "id": 39,
+      "panels": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "editorMode": "code",
-          "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\",phase=\"rtt\"} * 1000",
-          "instant": false,
-          "legendFormat": "{{cluster}} / {{server_name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Public RTT",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 12,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 1,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 54
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "sortBy": "Max",
+              "sortDesc": true
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
             }
           },
-          "decimals": 1,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
               },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 29
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "probe_icmp_duration_seconds{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\",phase=\"rtt\"} * 1000",
-          "instant": false,
-          "legendFormat": "{{cluster}} / {{server_name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Private RTT",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+              "editorMode": "code",
+              "expr": "probe_icmp_duration_seconds{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\",phase=\"rtt\"} * 1000",
+              "instant": false,
+              "legendFormat": "{{cluster}} / {{server_name}}",
+              "range": true,
+              "refId": "A"
             }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 39
-      },
-      "id": 12,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "avg_over_time(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) * 100",
-          "instant": false,
-          "legendFormat": "{{cluster}} / {{server_name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Public Availability %",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 39
-      },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "avg_over_time(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) * 100",
-          "instant": false,
-          "legendFormat": "{{cluster}} / {{server_name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Private Availability %",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 48
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "(1 - avg_over_time(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100",
-          "instant": false,
-          "legendFormat": "{{cluster}} / {{server_name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Public Packet Loss %",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 48
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "(1 - avg_over_time(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100",
-          "instant": false,
-          "legendFormat": "{{cluster}} / {{server_name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Private Packet Loss %",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 57
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "title": "Public RTT",
+          "type": "timeseries"
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "editorMode": "code",
-          "expr": "count(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"})",
-          "instant": false,
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Public Probe Count",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 12,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 1,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
           },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 57
-      },
-      "id": 17,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 54
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "editorMode": "code",
+              "expr": "probe_icmp_duration_seconds{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\",phase=\"rtt\"} * 1000",
+              "instant": false,
+              "legendFormat": "{{cluster}} / {{server_name}}",
+              "range": true,
+              "refId": "A"
+            }
           ],
-          "fields": "",
-          "values": false
+          "title": "Private RTT",
+          "type": "timeseries"
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "editorMode": "code",
-          "expr": "count(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"})",
-          "instant": false,
-          "range": true,
-          "refId": "A"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 12,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 2,
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 64
+          },
+          "id": 12,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": false
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time(probe_success{job=\"blackbox_ping_public\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) * 100",
+              "instant": false,
+              "legendFormat": "{{cluster}} / {{server_name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Public Availability %",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 12,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 2,
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 64
+          },
+          "id": 13,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": false
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              },
+              "editorMode": "code",
+              "expr": "avg_over_time(probe_success{job=~\"blackbox_ping|blackbox_ping_meydan\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]) * 100",
+              "instant": false,
+              "legendFormat": "{{cluster}} / {{server_name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Private Availability %",
+          "type": "timeseries"
         }
       ],
-      "title": "Private Probe Count",
-      "type": "stat"
+      "title": "Latency & Availability",
+      "type": "row"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
   "tags": [
     "availability",
-    "public",
-    "private",
     "blackbox",
-    "prometheus",
-    "meydan",
-    "shams",
     "dubai-south",
-    "spc"
+    "freeswitch",
+    "meydan",
+    "private",
+    "prometheus",
+    "public",
+    "shams",
+    "spc",
+    "trunk"
   ],
   "templating": {
     "list": [
