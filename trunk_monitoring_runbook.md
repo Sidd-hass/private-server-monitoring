@@ -51,7 +51,7 @@ fonouc_freeswitch_trunk ──fs_cli (ESL 8023)──► /usr/local/sbin/fs_trun
 | Meydan | my03 | 192.168.99.42 | `du_ae_trunk` (047777200) | ✅ Done 2026-10-13 |
 | Meydan | gw | 172.21.2.17 | none — trunk container runs with **0 gateways** (standby) | ➖ Not needed |
 | SHAMS | uc01 | 172.16.125.40 | `du_ae_trunk` (065794300, profile `from_du`) | ✅ Done 2026-10-13 |
-| Dubai South | ds02 | 192.168.160.7 | `du_ae_trunk` (044967600) | ⏳ Pending |
+| Dubai South | ds02 | 192.168.160.7 | `du_ae_trunk` (044967600) | ✅ Done 2026-10-13 |
 | Dubai South | ds01 | 192.168.160.6 | none — container running, 0 gateways (standby) | ⏳ Pending (install for failover visibility) |
 | UCPIN / UCDEMO / UCPMED | — | — | no trunk container (carrier connects by IP) | ➖ Needs a different check |
 | Tahseel / Cogent | — | — | not checked (VPN unreachable) | ❓ |
@@ -321,11 +321,27 @@ Grafana → **OCube → Public & Private Infrastructure Availability**:
 A trunk shows **DOWN** when its gateway Status is not UP *or* its metrics file is older than 3 minutes.
 Standby nodes never raise a container-down alarm unless they carried a trunk in the last 24 hours.
 
-### Suggested alerts (not yet configured)
+### Alerts (`prometheus/alert.rules.yml`, group `sip_trunk_alerts`)
 
-```promql
-(freeswitch_gateway_up == 0) unless freeswitch_gateway_up{server_name="spc-sj02",gateway="du_ae_trunk"}   # for 2m
-freeswitch_trunk_scrape_ok == 0                                                                        # on active trunk nodes
-```
+| Alert | Fires when | Severity |
+|---|---|---|
+| `SipTrunkDown` | a trunk's Status is not UP for 2 minutes | critical |
+| `SipTrunkContainerDown` | `fonouc_freeswitch_trunk` stopped for 1 minute on a node that carried a trunk in the last 24h | critical |
+| `SipTrunkFreeswitchNotAnswering` | container running but `fs_cli` (ESL 8023) not answering for 2 minutes | critical |
+| `SipTrunkMetricsStale` | `freeswitch_trunk.prom` not updated for over 5 minutes (cron stopped) | warning |
 
-Exclude SPC's `du_ae_trunk` (065100200, FAIL_WAIT) until dev confirms whether it is still used.
+- New nodes are covered automatically — no rule change needed.
+- Standby nodes (no gateway in the last 24h) never alert.
+- SPC's `du_ae_trunk` (065100200, FAIL_WAIT) is excluded from `SipTrunkDown` until dev confirms
+  whether it is still used. To re-include it, delete the `unless ...` part of the expression.
+- Registration state is not an alert label on purpose: a state change would otherwise resolve and
+  re-fire the alert. Check the dashboard's *Trunk Details* table for the state.
+
+### Notification cadence (`alertmanager/alertmanager.yml`)
+
+| Alerts | First notification | While unresolved | When resolved |
+|---|---|---|---|
+| Ping probes (`PublicPingDown`, `PrivatePingDown`, `meydanGatewayUnreachable`) | immediate | every 15 min | immediate |
+| Everything else, including trunk alerts | immediate | every 4 h (max 6 per 24 h) | immediate |
+
+Each trunk is its own alert group (`group_by` includes `gateway`), so two trunks on one node notify separately.
