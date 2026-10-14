@@ -1,0 +1,285 @@
+// Log shipper for a Kazoo node (CouchDB, RabbitMQ, Kazoo, FreeSWITCH, Valkey, kernel).
+// Only error/warning lines leave the node: these hosts write several GB of logs a day,
+// almost all of it info/debug. Every pipeline is also rate-capped so a log storm cannot
+// flood Loki. Labels: job="kazoo-node", server_name, cluster, service, level.
+//
+// Env (see docker-compose.yml): LOKI_URL, SERVER_NAME, CLUSTER.
+
+loki.write "central" {
+  endpoint {
+    url = sys.env("LOKI_URL")
+  }
+  external_labels = {
+    job         = "kazoo-node",
+    server_name = sys.env("SERVER_NAME"),
+    cluster     = sys.env("CLUSTER"),
+  }
+}
+
+// ---------------------------------------------------------------- CouchDB
+// [error] 2026-10-14T06:40:19.850052Z couchdb@host <0.1.0> ...
+local.file_match "couchdb" {
+  path_targets = [{"__path__" = "/var/log/couchdb/couchdb.log", "service" = "couchdb"}]
+}
+
+loki.source.file "couchdb" {
+  targets       = local.file_match.couchdb.targets
+  tail_from_end = true
+  forward_to    = [loki.process.couchdb.receiver]
+}
+
+loki.process "couchdb" {
+  stage.match {
+    selector = "{service=\"couchdb\"} !~ \"^\\\\[(error|warning|critical|alert|emergency)\\\\]\""
+    action   = "drop"
+  }
+  stage.regex {
+    expression = "^\\[(?P<level>[a-z]+)\\]"
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  stage.limit {
+    rate  = 20
+    burst = 100
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- RabbitMQ
+// 2026-10-14 06:40:18.469844+00:00 [error] <0.1.0> ... (crash reports span several lines)
+local.file_match "rabbitmq" {
+  path_targets = [{"__path__" = "/var/log/rabbitmq/*@*.log", "service" = "rabbitmq"}]
+}
+
+loki.source.file "rabbitmq" {
+  targets       = local.file_match.rabbitmq.targets
+  tail_from_end = true
+  forward_to    = [loki.process.rabbitmq.receiver]
+}
+
+loki.process "rabbitmq" {
+  stage.multiline {
+    firstline     = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"
+    max_wait_time = "3s"
+    max_lines     = 200
+  }
+  stage.match {
+    selector = "{service=\"rabbitmq\"} !~ \"^\\\\S+ \\\\S+ \\\\[(error|warning|critical|alert|emergency)\\\\]\""
+    action   = "drop"
+  }
+  stage.regex {
+    expression = "^\\S+ \\S+ \\[(?P<level>[a-z]+)\\]"
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  stage.limit {
+    rate  = 20
+    burst = 100
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- Kazoo (2600hz via syslog)
+// No level in the text, so keep lines that describe a failure.
+local.file_match "kazoo" {
+  path_targets = [
+    {"__path__" = "/var/log/kazoo/kazoo.log", "service" = "kazoo"},
+    {"__path__" = "/var/log/kazoo/kazoo-errors.log", "service" = "kazoo"},
+  ]
+}
+
+loki.source.file "kazoo" {
+  targets       = local.file_match.kazoo.targets
+  tail_from_end = true
+  forward_to    = [loki.process.kazoo.receiver]
+}
+
+loki.process "kazoo" {
+  stage.match {
+    selector = "{service=\"kazoo\"} !~ \"(?i)(error|crash|exception|badmatch|badarg|undef|function_clause|timeout|failed|unable to|exit with reason|no_return|emfile|eaddrinuse)\""
+    action   = "drop"
+  }
+  stage.static_labels {
+    values = { level = "error" }
+  }
+  stage.limit {
+    rate  = 30
+    burst = 150
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- FreeSWITCH
+// <uuid> 2026-10-14 06:40:00.300502 [WARNING] file.c:99 message  (kazoo-error.log holds WARNING and above)
+local.file_match "freeswitch" {
+  path_targets = [{"__path__" = "/var/log/freeswitch/kazoo-error.log", "service" = "freeswitch"}]
+}
+
+loki.source.file "freeswitch" {
+  targets       = local.file_match.freeswitch.targets
+  tail_from_end = true
+  forward_to    = [loki.process.freeswitch.receiver]
+}
+
+loki.process "freeswitch" {
+  // mod_kazoo prints the Erlang cookie in connection errors; never ship it.
+  stage.replace {
+    expression = "cookie matches '([^']*)'"
+    replace    = "<redacted>"
+  }
+  stage.regex {
+    expression = "\\[(?P<level>[A-Z]+)\\] "
+  }
+  stage.template {
+    source   = "level"
+    template = "{{ ToLower .Value }}"
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  stage.limit {
+    rate  = 30
+    burst = 150
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- Kernel
+// Drop firewall noise; keep OOM kills, I/O and filesystem errors, crashes, hangs.
+local.file_match "kernel" {
+  path_targets = [{"__path__" = "/var/log/kern.log", "service" = "kernel"}]
+}
+
+loki.source.file "kernel" {
+  targets       = local.file_match.kernel.targets
+  tail_from_end = true
+  forward_to    = [loki.process.kernel.receiver]
+}
+
+loki.process "kernel" {
+  stage.match {
+    selector = "{service=\"kernel\"} !~ \"(?i)(out of memory|oom-kill|killed process|i/o error|blk_update_request|ext4-fs error|segfault|call trace|blocked for more than|hung_task|table full|soft lockup|hardware error)\""
+    action   = "drop"
+  }
+  stage.static_labels {
+    values = { level = "error" }
+  }
+  stage.limit {
+    rate  = 10
+    burst = 50
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- Fonouc Go services
+// gorec: logrus key=value lines; goportal: dedicated error file.
+local.file_match "gorec" {
+  path_targets = [{"__path__" = "/var/log/gorec-panic-errors.log", "service" = "gorec"}]
+}
+
+loki.source.file "gorec" {
+  targets       = local.file_match.gorec.targets
+  tail_from_end = true
+  forward_to    = [loki.process.gorec.receiver]
+}
+
+loki.process "gorec" {
+  stage.match {
+    selector = "{service=\"gorec\"} !~ \"level=(warning|error|fatal|panic)\""
+    action   = "drop"
+  }
+  stage.regex {
+    expression = "level=(?P<level>[a-z]+)"
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  stage.limit {
+    rate  = 10
+    burst = 50
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+local.file_match "goportal" {
+  path_targets = [{"__path__" = "/var/log/goportalbackend-errors.log", "service" = "goportal"}]
+}
+
+loki.source.file "goportal" {
+  targets       = local.file_match.goportal.targets
+  tail_from_end = true
+  forward_to    = [loki.process.goportal.receiver]
+}
+
+loki.process "goportal" {
+  stage.static_labels {
+    values = { level = "error" }
+  }
+  stage.limit {
+    rate  = 10
+    burst = 50
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- Valkey + Sentinel
+// "1:S 14 Oct 2026 06:40:00.123 # message": '#' = warning. Sentinel failover events
+// (+sdown, +odown, +switch-master, ...) are logged at notice level and kept as well.
+discovery.docker "valkey" {
+  host = "unix:///var/run/docker.sock"
+  filter {
+    name   = "name"
+    values = ["valkey"]
+  }
+}
+
+discovery.relabel "valkey" {
+  targets = discovery.docker.valkey.targets
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container_name"
+  }
+  rule {
+    target_label = "service"
+    replacement  = "valkey"
+  }
+}
+
+loki.source.docker "valkey" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.valkey.output
+  forward_to = [loki.process.valkey.receiver]
+}
+
+loki.process "valkey" {
+  stage.match {
+    selector = "{service=\"valkey\"} !~ \"( # |[+-]sdown|[+-]odown|switch-master|failover|promoted|[+-]tilt|MASTER <-> REPLICA sync)\""
+    action   = "drop"
+  }
+  stage.regex {
+    expression = "^\\d+:[A-Z] .*? (?P<mark>[#*.-]) "
+  }
+  stage.template {
+    source   = "level"
+    template = "{{ if eq .mark \"#\" }}warning{{ else }}notice{{ end }}"
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  stage.limit {
+    rate  = 10
+    burst = 50
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}

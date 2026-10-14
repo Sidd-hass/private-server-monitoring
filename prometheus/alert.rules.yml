@@ -10,11 +10,21 @@ groups:
           summary: "CPU Spike on {{ $labels.server_name }} ({{ $labels.instance }})"
           description: "CPU usage exceeded 85% for 5 minutes on server {{ $labels.server_name }}."
 
+      # Early warning: fire before the hosting provider's memory threshold does.
+      - alert: RamHigh
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAM High on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "Memory usage has been above 80% for 10 minutes on server {{ $labels.server_name }}. Current usage is {{ $value | printf \"%.1f\" }}%."
+
       - alert: RamCritical
         expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
         for: 3m
         labels:
-          severity: warning
+          severity: critical
         annotations:
           summary: "RAM Critical on {{ $labels.server_name }} ({{ $labels.instance }})"
           description: "Memory usage exceeded 90% for 3 minutes on server {{ $labels.server_name }}."
@@ -63,6 +73,53 @@ groups:
         annotations:
           summary: "Server Down: {{ $labels.server_name }} ({{ $labels.instance }})"
           description: "Debian server OS target {{ $labels.server_name }} ({{ $labels.instance }}) is unreachable."
+
+  # Resource pressure: catches contention that a plain usage % hides.
+  - name: host_pressure_alerts
+    rules:
+      - alert: RootDiskFillingUp
+        expr: predict_linear(node_filesystem_avail_bytes{job="debian_servers", mountpoint="/"}[6h], 24 * 3600) < 0 and node_filesystem_avail_bytes{job="debian_servers", mountpoint="/"} / node_filesystem_size_bytes{job="debian_servers", mountpoint="/"} < 0.25
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Root disk will fill within 24h on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "At the growth rate of the last 6 hours, / on {{ $labels.server_name }} runs out of space within 24 hours."
+
+      - alert: MemoryPressure
+        expr: rate(node_pressure_memory_waiting_seconds_total{job="debian_servers"}[5m]) > 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory pressure on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "Tasks on {{ $labels.server_name }} have been stalled waiting for memory {{ $value | humanizePercentage }} of the time for 10 minutes. The working set no longer fits in RAM."
+
+      - alert: HostSwappingActively
+        expr: rate(node_vmstat_pswpin{job="debian_servers"}[5m]) > 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Active swapping on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "{{ $labels.server_name }} has been reading {{ $value | printf \"%.0f\" }} pages/s back from swap for 15 minutes."
+
+      - alert: OomKillDetected
+        expr: increase(node_vmstat_oom_kill{job="debian_servers"}[10m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "OOM killer fired on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "The kernel killed a process for lack of memory on {{ $labels.server_name }} in the last 10 minutes. Check dmesg / journalctl -k for the victim."
+
+      - alert: CpuStealHigh
+        expr: avg by (instance, server_name) (rate(node_cpu_seconds_total{job="debian_servers", mode="steal"}[5m])) * 100 > 10
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU steal on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "The hypervisor has withheld {{ $value | printf \"%.1f\" }}% of CPU time from {{ $labels.server_name }} for 15 minutes. The provider host is oversubscribed."
 
   - name: meydan_gateway_alerts
     rules:
@@ -154,6 +211,233 @@ groups:
         annotations:
           summary: "Trunk metrics stale on {{ $labels.cluster }} / {{ $labels.server_name }}"
           description: "freeswitch_trunk.prom on {{ $labels.server_name }} has not been updated for {{ $value | humanizeDuration }}. Check the fs_trunk_metrics cron job (journalctl -u cron)."
+
+  # ---------------------------------------------------------------------------
+  # RabbitMQ (Kazoo message bus), from the built-in rabbitmq_prometheus plugin.
+  # Kazoo nodes relay it through kazoo_service_metrics.sh (node_exporter
+  # textfile); a direct scrape uses targets/rabbitmq/*.json.
+  # rabbitmq_queue_* on /metrics are node-wide totals across all queues.
+  # ---------------------------------------------------------------------------
+  - name: rabbitmq_alerts
+    rules:
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ metrics unreachable on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "Prometheus cannot scrape RabbitMQ on {{ $labels.server_name }}. The broker or its rabbitmq_prometheus plugin is down."
+
+      - alert: RabbitMQQueueBacklog
+        expr: sum by (instance, server_name) (rabbitmq_queue_messages) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ backlog on {{ $labels.server_name }} ({{ $labels.instance }})"
+          description: "{{ $value | printf \"%.0f\" }} messages have been queued for 10 minutes on {{ $labels.server_name }}. Consumers are not keeping up; queued messages hold broker memory."
+
+      - alert: RabbitMQMemoryHigh
+        expr: rabbitmq_process_resident_memory_bytes / rabbitmq_resident_memory_limit_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ near memory watermark on {{ $labels.server_name }}"
+          description: "RabbitMQ on {{ $labels.server_name }} is using {{ $value | printf \"%.1f\" }}% of its vm_memory_high_watermark. Publishers will be blocked at 100%."
+
+      - alert: RabbitMQMemoryAlarm
+        expr: rabbitmq_alarms_memory_used_watermark == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ memory alarm on {{ $labels.server_name }}"
+          description: "RabbitMQ on {{ $labels.server_name }} has hit its memory watermark and is blocking publishers. Kazoo messaging is stalled."
+
+      - alert: RabbitMQDiskAlarm
+        expr: rabbitmq_alarms_free_disk_space_watermark == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ disk alarm on {{ $labels.server_name }}"
+          description: "Free disk on {{ $labels.server_name }} is below RabbitMQ's disk_free_limit; publishers are blocked."
+
+      - alert: RabbitMQFileDescriptorAlarm
+        expr: rabbitmq_alarms_file_descriptor_limit == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ file descriptor alarm on {{ $labels.server_name }}"
+          description: "RabbitMQ on {{ $labels.server_name }} has run out of file descriptors and refuses new connections."
+
+  # ---------------------------------------------------------------------------
+  # Kazoo node services, from scripts/kazoo_service_metrics.sh (cron, every
+  # minute) through each node's node_exporter textfile collector.
+  # ---------------------------------------------------------------------------
+  - name: kazoo_service_alerts
+    rules:
+      - alert: KazooServiceMetricsStale
+        expr: time() - node_textfile_mtime_seconds{file=~".*kazoo_services.prom"} > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kazoo service metrics stale on {{ $labels.server_name }}"
+          description: "kazoo_services.prom on {{ $labels.server_name }} has not been updated for {{ $value | humanizeDuration }}. Check /etc/cron.d/kazoo_service_metrics and run /opt/server-monitorig/kazoo_service_metrics.sh --stdout."
+
+      - alert: KazooContainerDown
+        expr: kazoo_container_running{container=~"fonouc_.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.container }} stopped on {{ $labels.server_name }}"
+          description: "{{ $labels.container }} on {{ $labels.server_name }} has not been running for 2 minutes."
+
+      - alert: KazooContainerRestarted
+        expr: changes(kazoo_container_start_time_seconds{container=~"fonouc_.*"}[10m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container }} restarted on {{ $labels.server_name }}"
+          description: "{{ $labels.container }} on {{ $labels.server_name }} started again in the last 10 minutes. Check docker logs and journalctl -k for OOM kills."
+
+      - alert: CouchDBDown
+        expr: kazoo_couchdb_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CouchDB not answering on {{ $labels.server_name }}"
+          description: "CouchDB on {{ $labels.server_name }} has not answered on 127.0.0.1:5984 for 2 minutes."
+
+      - alert: CouchDBDiskShareHigh
+        expr: kazoo_couchdb_file_bytes_sum / on(instance) node_filesystem_size_bytes{mountpoint="/"} > 0.6
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CouchDB uses {{ $value | humanizePercentage }} of the root disk on {{ $labels.server_name }}"
+          description: "CouchDB data on {{ $labels.server_name }} has grown past 60% of the root filesystem. Check the largest databases on the Kazoo CouchDB dashboard and compaction/MODB retention."
+
+      - alert: CouchDBSlowRequests
+        expr: kazoo_couchdb_stat_recent{stat="couchdb.request_time", q="0.95"} > 500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CouchDB slow on {{ $labels.server_name }}"
+          description: "95th percentile CouchDB request time on {{ $labels.server_name }} has been above 500 ms for 10 minutes (now {{ $value | printf \"%.0f\" }} ms). Kazoo API and call setup slow down with it."
+
+      - alert: CouchDBServerErrors
+        expr: sum by (instance, server_name) (increase(kazoo_couchdb_stat_total{stat=~"couchdb.httpd_status_codes.5.."}[15m])) > 20
+        labels:
+          severity: warning
+        annotations:
+          summary: "CouchDB returning 5xx on {{ $labels.server_name }}"
+          description: "CouchDB on {{ $labels.server_name }} returned {{ $value | printf \"%.0f\" }} server errors in the last 15 minutes. Check docker logs fonouc_couchdb."
+
+      - alert: CouchDBMailboxBacklog
+        expr: kazoo_couchdb_message_queue{process="any"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CouchDB internal backlog on {{ $labels.server_name }}"
+          description: "An Erlang process inside CouchDB on {{ $labels.server_name }} has had over 1000 queued messages for 10 minutes. CouchDB is falling behind (usually disk I/O)."
+
+      - alert: KazooRabbitMQDown
+        expr: kazoo_rabbitmq_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ not answering on {{ $labels.server_name }}"
+          description: "rabbitmqctl on {{ $labels.server_name }} has not answered for 2 minutes."
+
+      - alert: KazooRabbitMQQueuesWithoutConsumers
+        expr: kazoo_rabbitmq_queues_without_consumers > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ queues with no consumer on {{ $labels.server_name }}"
+          description: "{{ $value | printf \"%.0f\" }} queue(s) on {{ $labels.server_name }} hold messages that nothing is reading. They grow until the broker hits its memory watermark."
+
+      - alert: FreeswitchDown
+        expr: kazoo_freeswitch_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Media FreeSWITCH not answering on {{ $labels.server_name }}"
+          description: "fs_cli on {{ $labels.server_name }} has not answered for 2 minutes. Calls on this node are affected."
+
+      - alert: ValkeyDown
+        expr: kazoo_valkey_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Valkey not answering on {{ $labels.server_name }}"
+          description: "{{ $labels.container }} on {{ $labels.server_name }} has not answered INFO for 2 minutes."
+
+      - alert: ValkeyMemoryHigh
+        expr: kazoo_valkey_memory_used_bytes / (kazoo_valkey_maxmemory_bytes > 0) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Valkey near maxmemory on {{ $labels.server_name }}"
+          description: "{{ $labels.container }} on {{ $labels.server_name }} is at {{ $value | humanizePercentage }} of maxmemory."
+
+      - alert: ValkeyMasterLinkDown
+        expr: kazoo_valkey_master_link_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Valkey replica lost its master on {{ $labels.server_name }}"
+          description: "{{ $labels.container }} on {{ $labels.server_name }} has not been connected to its master for 2 minutes; its data is going stale."
+
+      - alert: ValkeyPersistenceFailing
+        expr: kazoo_valkey_status_ok{field=~"rdb_last_bgsave_status|aof_last_write_status|aof_last_bgrewrite_status"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Valkey {{ $labels.field }} failing on {{ $labels.server_name }}"
+          description: "{{ $labels.container }} on {{ $labels.server_name }} reports {{ $labels.field }} not ok. Data written now may not survive a restart (often a full disk)."
+
+      - alert: ValkeySentinelMasterDown
+        expr: kazoo_valkey_sentinel_master_ok == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sentinel sees Valkey master {{ $labels.master }} as down ({{ $labels.server_name }})"
+          description: "Sentinel on {{ $labels.server_name }} flags master {{ $labels.master }} as down. A failover should follow; if it does not, queue writes are failing."
+
+      - alert: ValkeySentinelQuorumAtRisk
+        expr: kazoo_valkey_sentinel_sentinels <= kazoo_valkey_sentinel_quorum
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Valkey Sentinel quorum at risk for {{ $labels.master }} ({{ $labels.server_name }})"
+          description: "Only {{ $value }} sentinel(s) watch {{ $labels.master }}, no more than its quorum. Losing one more sentinel prevents automatic failover."
+
+      - alert: ValkeyFailover
+        expr: count by (server_name, master) (last_over_time(kazoo_valkey_sentinel_master_info[10m])) > 1
+        labels:
+          severity: warning
+        annotations:
+          summary: "Valkey master {{ $labels.master }} changed ({{ $labels.server_name }})"
+          description: "Sentinel on {{ $labels.server_name }} reported more than one master address or state for {{ $labels.master }} in the last 10 minutes: a failover or master flapping."
 
   - name: custom_nginx_alerts
     rules:

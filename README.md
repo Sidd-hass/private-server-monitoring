@@ -165,6 +165,27 @@ Once you log into Grafana at `http://<SERVER_IP>:3000`, open **Dashboards -> Obs
 
 Configured in `prometheus/alert.rules.yml`:
 1. **`CpuSpike`**: CPU usage > 85% for 5 minutes (`critical`).
-2. **`RamCritical`**: Memory usage > 90% for 3 minutes (`warning`).
+2. **`RamHigh`** / **`RamCritical`**: Memory usage > 80% for 10 minutes (`warning`) / > 90% for 3 minutes (`critical`).
 3. **`DiskCritical`**: Root disk usage > 85% for 5 minutes (`warning`).
 4. **`ServerDown`**: Any monitored target unreachable for 1 minute (`page`).
+5. **`RabbitMQDown`**, **`RabbitMQQueueBacklog`** (> 1000 queued messages for 10 minutes), **`RabbitMQMemoryHigh`** (> 80% of the memory watermark), **`RabbitMQMemoryAlarm`**: scraped from targets in `prometheus/targets/rabbitmq/`.
+
+To capture a memory baseline on a node (calm vs. peak), run `scripts/capture_memory_baseline.sh calm` and later `... peak`.
+
+---
+
+## Kazoo node monitoring (CouchDB, RabbitMQ, Valkey, FreeSWITCH)
+
+Dashboards (Observability folder): **Kazoo Node Health**, **Kazoo CouchDB**, **Kazoo RabbitMQ**, **Kazoo Valkey**.
+Each has `Prometheus` / `Logs` datasource selectors, so they work whatever UID Grafana gave the datasources.
+
+**Metrics**: `scripts/kazoo_service_metrics.sh` runs from cron on each node and writes
+`kazoo_*` / `rabbitmq_*` metrics for node_exporter's textfile collector. Settings live in
+`kazoo_service_metrics.env` next to the script (root-only, contains credentials).
+Test with `kazoo_service_metrics.sh --stdout`; keep the script executable (`chmod 755`).
+
+**Logs**: `alloy/kazoo-node/` ships error/warning lines only (CouchDB, RabbitMQ, Kazoo,
+FreeSWITCH, kernel, gorec/goportal, Valkey/Sentinel) to Loki with labels
+`job="kazoo-node"`, `server_name`, `cluster`, `service`, `level`. Copy the folder to the node,
+create `.env` from `.env.example`, then `docker compose up -d`. Loki must be reachable from
+the node on port 3100.

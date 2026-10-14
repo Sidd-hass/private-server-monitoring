@@ -1,0 +1,2696 @@
+{
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "description":  "RabbitMQ detail per Kazoo node: message flow, queues, connections and churn, memory breakdown and alarms. Source: rabbitmq_prometheus plugin + rabbitmqctl via scripts/kazoo_service_metrics.sh.",
+    "editable":  true,
+    "graphTooltip":  1,
+    "liveNow":  false,
+    "links":  [
+                  {
+                      "title":  "Kazoo",
+                      "type":  "dashboards",
+                      "tags":  [
+                                   "kazoo"
+                               ],
+                      "asDropdown":  false,
+                      "includeVars":  true,
+                      "keepTime":  true,
+                      "icon":  "external link",
+                      "targetBlank":  false
+                  }
+              ],
+    "panels":  [
+                   {
+                       "collapsed":  false,
+                       "gridPos":  {
+                                       "h":  1,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  0
+                                   },
+                       "id":  1,
+                       "panels":  [
+
+                                  ],
+                       "title":  "Overview",
+                       "type":  "row"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "rabbitmqctl answering.",
+                       "id":  2,
+                       "title":  "RabbitMQ",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  0,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "none",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+                                                                             {
+                                                                                 "type":  "value",
+                                                                                 "options":  {
+                                                                                                 "0":  {
+                                                                                                           "color":  "red",
+                                                                                                           "text":  "DOWN",
+                                                                                                           "index":  0
+                                                                                                       },
+                                                                                                 "1":  {
+                                                                                                           "color":  "green",
+                                                                                                           "text":  "UP",
+                                                                                                           "index":  1
+                                                                                                       }
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "kazoo_rabbitmq_up{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Publishers are blocked at 100%.",
+                       "id":  3,
+                       "title":  "Memory vs Watermark",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  3,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "percent",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  70
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  85
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "100 * rabbitmq_process_resident_memory_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"} / rabbitmq_resident_memory_limit_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "How much host RAM RabbitMQ may take before blocking. ~25% is safe on a shared node.",
+                       "id":  4,
+                       "title":  "Watermark vs RAM",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  6,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "percent",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  40
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  60
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "100 * rabbitmq_resident_memory_limit_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"} / on(instance) node_memory_MemTotal_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  5,
+                       "title":  "Connections",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  9,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "blue",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_connections{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  6,
+                       "title":  "Channels",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  12,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "blue",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_channels{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  7,
+                       "title":  "Consumers",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  15,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "blue",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_consumers{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  8,
+                       "title":  "Queues",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  18,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "blue",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_queues{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Waiting for a consumer, all queues.",
+                       "id":  9,
+                       "title":  "Ready Messages",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  3,
+                                       "x":  21,
+                                       "y":  1
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  100
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1000
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_queue_messages_ready{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  10,
+                       "title":  "Memory Alarm",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  4,
+                                       "w":  4,
+                                       "x":  0,
+                                       "y":  6
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "none",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+                                                                             {
+                                                                                 "type":  "value",
+                                                                                 "options":  {
+                                                                                                 "0":  {
+                                                                                                           "color":  "green",
+                                                                                                           "text":  "OK",
+                                                                                                           "index":  0
+                                                                                                       },
+                                                                                                 "1":  {
+                                                                                                           "color":  "red",
+                                                                                                           "text":  "ALARM",
+                                                                                                           "index":  1
+                                                                                                       }
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  1
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_alarms_memory_used_watermark{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  11,
+                       "title":  "Disk Alarm",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  4,
+                                       "w":  4,
+                                       "x":  4,
+                                       "y":  6
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "none",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+                                                                             {
+                                                                                 "type":  "value",
+                                                                                 "options":  {
+                                                                                                 "0":  {
+                                                                                                           "color":  "green",
+                                                                                                           "text":  "OK",
+                                                                                                           "index":  0
+                                                                                                       },
+                                                                                                 "1":  {
+                                                                                                           "color":  "red",
+                                                                                                           "text":  "ALARM",
+                                                                                                           "index":  1
+                                                                                                       }
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  1
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_alarms_free_disk_space_watermark{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  12,
+                       "title":  "File Descriptor Alarm",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  4,
+                                       "w":  4,
+                                       "x":  8,
+                                       "y":  6
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "none",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+                                                                             {
+                                                                                 "type":  "value",
+                                                                                 "options":  {
+                                                                                                 "0":  {
+                                                                                                           "color":  "green",
+                                                                                                           "text":  "OK",
+                                                                                                           "index":  0
+                                                                                                       },
+                                                                                                 "1":  {
+                                                                                                           "color":  "red",
+                                                                                                           "text":  "ALARM",
+                                                                                                           "index":  1
+                                                                                                       }
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  1
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_alarms_file_descriptor_limit{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  13,
+                       "title":  "Unreachable Cluster Peers",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  4,
+                                       "w":  4,
+                                       "x":  12,
+                                       "y":  6
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  1
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_unreachable_cluster_peers_count{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Queues holding messages that nothing reads.",
+                       "id":  14,
+                       "title":  "Queues Without Consumers",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  4,
+                                       "w":  4,
+                                       "x":  16,
+                                       "y":  6
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  1
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "kazoo_rabbitmq_queues_without_consumers{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  15,
+                       "title":  "Unacked Messages",
+                       "type":  "stat",
+                       "gridPos":  {
+                                       "h":  4,
+                                       "w":  4,
+                                       "x":  20,
+                                       "y":  6
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short",
+                                                            "decimals":  1,
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "orange",
+                                                                                                 "value":  100
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  1000
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "area",
+                                       "justifyMode":  "auto",
+                                       "orientation":  "auto",
+                                       "textMode":  "auto",
+                                       "wideLayout":  true,
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "",
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_queue_messages_unacked{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{server_name}}",
+                                           "refId":  "A",
+                                           "instant":  true,
+                                           "range":  false
+                                       }
+                                   ]
+                   },
+                   {
+                       "collapsed":  false,
+                       "gridPos":  {
+                                       "h":  1,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  10
+                                   },
+                       "id":  16,
+                       "panels":  [
+
+                                  ],
+                       "title":  "Message Flow",
+                       "type":  "row"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Messages per second through the broker.",
+                       "id":  17,
+                       "title":  "Message Rates",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  9,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  11
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_received_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]))",
+                                           "legendFormat":  "Published",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_routed_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]))",
+                                           "legendFormat":  "Routed",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_delivered_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]))",
+                                           "legendFormat":  "Delivered",
+                                           "refId":  "C"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_acknowledged_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]))",
+                                           "legendFormat":  "Acknowledged",
+                                           "refId":  "D"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_redelivered_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m]))",
+                                           "legendFormat":  "Redelivered",
+                                           "refId":  "E"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Ready/unacked across all queues, plus the deepest individual queues.",
+                       "id":  18,
+                       "title":  "Queue Depth",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  9,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  11
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_queue_messages_ready{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Ready",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_queue_messages_unacked{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Unacked",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_queue_messages_paged_out{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Paged out to disk",
+                                           "refId":  "C"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "topk(5, kazoo_rabbitmq_queue_messages{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"})",
+                                           "legendFormat":  "{{queue}}",
+                                           "refId":  "D"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Unroutable (no matching queue) and dead-lettered messages per minute.",
+                       "id":  19,
+                       "title":  "Lost or Rejected Messages",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  20
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_unroutable_dropped_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 60",
+                                           "legendFormat":  "Unroutable dropped",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_unroutable_returned_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 60",
+                                           "legendFormat":  "Unroutable returned",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_dead_lettered_expired_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 60",
+                                           "legendFormat":  "Dead-lettered (expired)",
+                                           "refId":  "C"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_dead_lettered_rejected_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 60",
+                                           "legendFormat":  "Dead-lettered (rejected)",
+                                           "refId":  "D"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rate(rabbitmq_global_messages_dead_lettered_maxlen_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 60",
+                                           "legendFormat":  "Dead-lettered (max length)",
+                                           "refId":  "E"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  20,
+                       "title":  "Publishers & Consumers",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  20
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (server_name) (rabbitmq_global_publishers{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"})",
+                                           "legendFormat":  "Publishers",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_consumers{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Consumers",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "kazoo_rabbitmq_queues_without_consumers{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Queues without consumers",
+                                           "refId":  "C"
+                                       }
+                                   ]
+                   },
+                   {
+                       "collapsed":  false,
+                       "gridPos":  {
+                                       "h":  1,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  28
+                                   },
+                       "id":  21,
+                       "panels":  [
+
+                                  ],
+                       "title":  "Connections & Churn",
+                       "type":  "row"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Which Kazoo nodes hold the channels. Channels cost broker memory (connection_channels).",
+                       "id":  22,
+                       "title":  "Channels per Client Host",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  29
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "kazoo_rabbitmq_peer_channels{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{peer}}",
+                                           "refId":  "A"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  23,
+                       "title":  "Connections per Client Host",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  29
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "kazoo_rabbitmq_peer_connections{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "{{peer}}",
+                                           "refId":  "A"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Opened/closed per second. Kazoo constantly re-creating connections, channels or queues wastes CPU and memory.",
+                       "id":  24,
+                       "title":  "Churn",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  37
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_connections_opened_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Connections opened",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_connections_closed_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Connections closed",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_channels_opened_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Channels opened",
+                                           "refId":  "C"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_channels_closed_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Channels closed",
+                                           "refId":  "D"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_queues_created_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Queues created",
+                                           "refId":  "E"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_queues_deleted_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Queues deleted",
+                                           "refId":  "F"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "AMQP bytes in/out over all connections.",
+                       "id":  25,
+                       "title":  "Network Traffic",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  37
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "Bps",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_connection_incoming_bytes_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "In",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_connection_outgoing_bytes_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "Out",
+                                           "refId":  "B"
+                                       }
+                                   ]
+                   },
+                   {
+                       "collapsed":  false,
+                       "gridPos":  {
+                                       "h":  1,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  45
+                                   },
+                       "id":  26,
+                       "panels":  [
+
+                                  ],
+                       "title":  "Memory & Resources",
+                       "type":  "row"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Where broker memory goes (rabbitmq-diagnostics memory_breakdown). allocated_unused is reserved by the Erlang allocator but not in use.",
+                       "id":  27,
+                       "title":  "Memory Breakdown",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  10,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  46
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  1,
+                                                                           "fillOpacity":  60,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "normal"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "bytes",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "kazoo_rabbitmq_memory_breakdown_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"} > 1e6",
+                                           "legendFormat":  "{{category}}",
+                                           "refId":  "A"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Dashed: vm_memory_high_watermark. Publishers block when memory reaches it.",
+                       "id":  28,
+                       "title":  "Memory vs Watermark",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  10,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  46
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "bytes",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "matcher":  {
+                                                                                 "id":  "byRegexp",
+                                                                                 "options":  "^(Watermark|Host RAM)"
+                                                                             },
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.lineStyle",
+                                                                                        "value":  {
+                                                                                                      "fill":  "dash",
+                                                                                                      "dash":  [
+                                                                                                                   10,
+                                                                                                                   10
+                                                                                                               ]
+                                                                                                  }
+                                                                                    }
+                                                                                ]
+                                                             }
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_process_resident_memory_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Resident memory",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_resident_memory_limit_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Watermark",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "node_memory_MemTotal_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Host RAM",
+                                           "refId":  "C"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  29,
+                       "title":  "Disk Free vs Alarm Limit",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  8,
+                                       "x":  0,
+                                       "y":  56
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "bytes",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "matcher":  {
+                                                                                 "id":  "byRegexp",
+                                                                                 "options":  "^Alarm limit"
+                                                                             },
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.lineStyle",
+                                                                                        "value":  {
+                                                                                                      "fill":  "dash",
+                                                                                                      "dash":  [
+                                                                                                                   10,
+                                                                                                                   10
+                                                                                                               ]
+                                                                                                  }
+                                                                                    }
+                                                                                ]
+                                                             }
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_disk_space_available_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Disk free",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_disk_space_available_limit_bytes{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Alarm limit",
+                                           "refId":  "B"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "",
+                       "id":  30,
+                       "title":  "File Descriptors & Processes",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  8,
+                                       "x":  8,
+                                       "y":  56
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_process_open_fds{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Open fds",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_erlang_processes_used{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Erlang processes",
+                                           "refId":  "B"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "${ds}"
+                                      },
+                       "description":  "Run queue > 0 for long means the broker is CPU-starved.",
+                       "id":  31,
+                       "title":  "Erlang Scheduler",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  8,
+                                       "x":  16,
+                                       "y":  56
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "line",
+                                                                           "lineInterpolation":  "smooth",
+                                                                           "lineWidth":  2,
+                                                                           "fillOpacity":  10,
+                                                                           "showPoints":  "never",
+                                                                           "spanNulls":  false,
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        },
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "off"
+                                                                                               }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rabbitmq_erlang_scheduler_run_queue{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
+                                           "legendFormat":  "Run queue",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "${ds}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "rate(rabbitmq_erlang_gc_runs_total{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])",
+                                           "legendFormat":  "GC runs / s",
+                                           "refId":  "B"
+                                       }
+                                   ]
+                   },
+                   {
+                       "collapsed":  false,
+                       "gridPos":  {
+                                       "h":  1,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  64
+                                   },
+                       "id":  32,
+                       "panels":  [
+
+                                  ],
+                       "title":  "Logs: RabbitMQ",
+                       "type":  "row"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "loki",
+                                          "uid":  "${logs}"
+                                      },
+                       "description":  "Lines per 5 minutes by level. Only error/warning lines are shipped.",
+                       "id":  33,
+                       "title":  "RabbitMQ Errors & Warnings",
+                       "type":  "timeseries",
+                       "gridPos":  {
+                                       "h":  7,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  65
+                                   },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "drawStyle":  "bars",
+                                                                           "fillOpacity":  80,
+                                                                           "lineWidth":  1,
+                                                                           "showPoints":  "never",
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "none"
+                                                                                        }
+                                                                       },
+                                                            "unit":  "short",
+                                                            "mappings":  [
+
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  {
+                                                                                             "color":  "green",
+                                                                                             "value":  null
+                                                                                         }
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "options":  {
+                                       "legend":  {
+                                                      "calcs":  [
+                                                                    "mean",
+                                                                    "max",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table",
+                                                      "placement":  "bottom",
+                                                      "showLegend":  true
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi",
+                                                       "sort":  "desc"
+                                                   }
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "loki",
+                                                              "uid":  "${logs}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "sum by (level) (count_over_time({job=\"kazoo-node\",server_name=~\"$server\",service=\"rabbitmq\"} [5m]))",
+                                           "legendFormat":  "{{level}}",
+                                           "queryType":  "range",
+                                           "refId":  "A"
+                                       }
+                                   ]
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "loki",
+                                          "uid":  "${logs}"
+                                      },
+                       "description":  "RabbitMQ node log: [error], [warning] and [critical] entries, including multi-line crash reports.",
+                       "id":  34,
+                       "title":  "RabbitMQ Log",
+                       "type":  "logs",
+                       "gridPos":  {
+                                       "h":  14,
+                                       "w":  24,
+                                       "x":  0,
+                                       "y":  72
+                                   },
+                       "options":  {
+                                       "showTime":  true,
+                                       "showLabels":  false,
+                                       "showCommonLabels":  false,
+                                       "wrapLogMessage":  true,
+                                       "prettifyLogMessage":  false,
+                                       "enableLogDetails":  true,
+                                       "dedupStrategy":  "none",
+                                       "sortOrder":  "Descending"
+                                   },
+                       "targets":  [
+                                       {
+                                           "datasource":  {
+                                                              "type":  "loki",
+                                                              "uid":  "${logs}"
+                                                          },
+                                           "editorMode":  "code",
+                                           "expr":  "{job=\"kazoo-node\",server_name=~\"$server\",service=\"rabbitmq\"}",
+                                           "legendFormat":  "",
+                                           "queryType":  "range",
+                                           "refId":  "A"
+                                       }
+                                   ]
+                   }
+               ],
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "tags":  [
+                 "kazoo",
+                 "rabbitmq"
+             ],
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "name":  "ds",
+                                        "label":  "Prometheus",
+                                        "type":  "datasource",
+                                        "query":  "prometheus",
+                                        "regex":  "",
+                                        "hide":  0,
+                                        "refresh":  1,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "current":  {
+
+                                                    },
+                                        "options":  [
+
+                                                    ],
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "name":  "logs",
+                                        "label":  "Logs",
+                                        "type":  "datasource",
+                                        "query":  "loki",
+                                        "regex":  "",
+                                        "hide":  0,
+                                        "refresh":  1,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "current":  {
+
+                                                    },
+                                        "options":  [
+
+                                                    ],
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "name":  "cluster",
+                                        "label":  "Cluster",
+                                        "type":  "query",
+                                        "datasource":  {
+                                                           "type":  "prometheus",
+                                                           "uid":  "${ds}"
+                                                       },
+                                        "definition":  "label_values(up{job=\"debian_servers\"}, cluster)",
+                                        "query":  {
+                                                      "query":  "label_values(up{job=\"debian_servers\"}, cluster)",
+                                                      "refId":  "StandardVariableQuery"
+                                                  },
+                                        "refresh":  2,
+                                        "sort":  1,
+                                        "includeAll":  true,
+                                        "allValue":  ".*",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "selected":  true,
+                                                        "text":  "ucpin",
+                                                        "value":  "ucpin"
+                                                    },
+                                        "options":  [
+
+                                                    ],
+                                        "regex":  "",
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "name":  "server",
+                                        "label":  "Server",
+                                        "type":  "query",
+                                        "datasource":  {
+                                                           "type":  "prometheus",
+                                                           "uid":  "${ds}"
+                                                       },
+                                        "definition":  "label_values(up{job=\"debian_servers\",cluster=~\"$cluster\"}, server_name)",
+                                        "query":  {
+                                                      "query":  "label_values(up{job=\"debian_servers\",cluster=~\"$cluster\"}, server_name)",
+                                                      "refId":  "StandardVariableQuery"
+                                                  },
+                                        "refresh":  2,
+                                        "sort":  1,
+                                        "includeAll":  true,
+                                        "allValue":  ".*",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "selected":  true,
+                                                        "text":  "ucpin11",
+                                                        "value":  "ucpin11"
+                                                    },
+                                        "options":  [
+
+                                                    ],
+                                        "regex":  "",
+                                        "skipUrlSync":  false
+                                    }
+                                ]
+                   },
+    "time":  {
+                 "from":  "now-24h",
+                 "to":  "now"
+             },
+    "timepicker":  {
+
+                   },
+    "timezone":  "browser",
+    "title":  "Kazoo RabbitMQ",
+    "uid":  "kazoo-rabbitmq",
+    "version":  1
+}
