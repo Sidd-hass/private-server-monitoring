@@ -1,0 +1,32 @@
+# Log shipper for one Kazoo node. Copy this folder to the node (e.g. /opt/server-monitorig/alloy),
+# create .env next to it (see .env.example) and run: docker compose up -d
+services:
+  alloy:
+    image: grafana/alloy:v1.11.3
+    container_name: kazoo-log-shipper
+    restart: unless-stopped
+    # Host network so the UI/metrics listener stays on 127.0.0.1 and Loki is reached directly.
+    network_mode: host
+    # Hard limits so the shipper can never compete with Kazoo for memory/CPU.
+    mem_limit: 256m
+    memswap_limit: 256m
+    cpus: 0.5
+    command:
+      - run
+      - --server.http.listen-addr=127.0.0.1:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      LOKI_URL: ${LOKI_URL:?Set LOKI_URL in .env}
+      SERVER_NAME: ${SERVER_NAME:?Set SERVER_NAME in .env}
+      CLUSTER: ${CLUSTER:?Set CLUSTER in .env}
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - /var/log:/var/log:ro
+      # Read-only mount, but the Docker API itself is not restricted: needed only for the
+      # Valkey/Sentinel container logs.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data   # read positions, so restarts do not re-ship or skip lines
+
+volumes:
+  alloy_data:
