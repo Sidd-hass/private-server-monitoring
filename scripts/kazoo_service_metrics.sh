@@ -20,6 +20,7 @@
 #   RABBIT_CONTAINER RabbitMQ container, when the name does not contain "rabbit"
 #   RABBIT_METRICS_URL rabbitmq_prometheus endpoint (default http://127.0.0.1:15692/metrics)
 #   VALKEY_SENTINEL_ARGS / VALKEY_SENTINEL_PASS  Sentinel valkey-cli options (default "-p 26379") and password (default VALKEY_PASS)
+#   VALKEY_CONTAINER / VALKEY_SENTINEL_CONTAINER  container names when auto-detection (first "valkey") is wrong
 # The CouchDB /_system + /_stats and RabbitMQ memory breakdown sections need jq.
 # Test without writing anything:  kazoo_service_metrics.sh --stdout
 #                                 kazoo_service_metrics.sh --couch-sizes --stdout
@@ -37,6 +38,19 @@ RABBIT_TOP_QUEUES=${RABBIT_TOP_QUEUES:-20}
 RABBIT_METRICS_URL=${RABBIT_METRICS_URL:-http://127.0.0.1:15692/metrics}
 VALKEY_SENTINEL_ARGS=${VALKEY_SENTINEL_ARGS:--p 26379}
 VALKEY_SENTINEL_PASS=${VALKEY_SENTINEL_PASS:-$VALKEY_PASS}
+# Per-service cgroup metrics: systemd services smaller than this are skipped (containers always kept).
+CGROUP_MIN_MB=${CGROUP_MIN_MB:-20}
+# Log analysis (per-database CouchDB activity, error counts and top error messages).
+LOG_METRICS=${LOG_METRICS:-1}
+STATE_DIR=${STATE_DIR:-/var/lib/kazoo_service_metrics}
+LOG_MAX_BYTES=${LOG_MAX_BYTES:-50000000}
+LOG_SAMPLE_BYTES=${LOG_SAMPLE_BYTES:-3000000}
+COUCH_LOG=${COUCH_LOG:-/var/log/couchdb/couchdb.log}
+KAZOO_LOG=${KAZOO_LOG:-/var/log/kazoo/kazoo.log}
+# Newest node log: hosts renamed over time keep an old *@localhost.log next to the live one.
+RABBIT_LOG=${RABBIT_LOG:-$(ls -t /var/log/rabbitmq/*@*.log 2>/dev/null | head -1)}
+FS_ERROR_LOG=${FS_ERROR_LOG:-/var/log/freeswitch/kazoo-error.log}
+STDOUT=0
 
 have() { command -v "$1" >/dev/null 2>&1; }
 # Label values must not break the exposition format.
@@ -159,8 +173,10 @@ couch_size_metrics() {
     [ -z "$file" ] && file=$(printf '%s' "$info" | grep -oE '"disk_size":[0-9]+' | cut -d: -f2)
     [ -z "$active" ] && active=$(printf '%s' "$info" | grep -oE '"data_size":[0-9]+' | cut -d: -f2)
     file=$(num "$file"); active=$(num "$active")
+    docs=$(num "$(printf '%s' "$info" | grep -oE '"doc_count":[0-9]+' | head -1 | cut -d: -f2)")
+    deleted=$(num "$(printf '%s' "$info" | grep -oE '"doc_del_count":[0-9]+' | head -1 | cut -d: -f2)")
     n=$((n + 1)); tf=$((tf + file)); ta=$((ta + active))
-    rows+="$file $active $db"$'\n'
+    rows+="$file $active $docs $deleted $db"$'\n'
   done <<< "$dbs"
 
   meta kazoo_couchdb_databases gauge "Number of CouchDB databases"; echo "kazoo_couchdb_databases $n"
@@ -168,14 +184,18 @@ couch_size_metrics() {
   meta kazoo_couchdb_active_bytes_sum gauge "Live data in all databases; file - active is reclaimable by compaction"
   echo "kazoo_couchdb_active_bytes_sum $ta"
   # Only the largest databases get their own series, to keep cardinality bounded.
-  meta kazoo_couchdb_database_file_bytes gauge "On-disk size of the largest databases"
-  printf '%s' "$rows" | sort -rn | head -n "$COUCH_TOP_DBS" | while read -r file active db; do
-    echo "kazoo_couchdb_database_file_bytes{db=\"$(esc "$db")\"} $file"
-  done
-  meta kazoo_couchdb_database_active_bytes gauge "Live data in the largest databases"
-  printf '%s' "$rows" | sort -rn | head -n "$COUCH_TOP_DBS" | while read -r file active db; do
-    echo "kazoo_couchdb_database_active_bytes{db=\"$(esc "$db")\"} $active"
-  done
+  printf '%s' "$rows" | sort -rn | head -n "$COUCH_TOP_DBS" | awk '
+    { gsub(/[\\"]/, "", $5); f[NR] = $1; a[NR] = $2; d[NR] = $3; x[NR] = $4; db[NR] = $5 }
+    function fam(name, help, v,   i) {
+      print "# HELP " name " " help; print "# TYPE " name " gauge"
+      for (i = 1; i <= NR; i++) printf "%s{db=\"%s\"} %s\n", name, db[i], v[i]
+    }
+    END {
+      fam("kazoo_couchdb_database_file_bytes", "On-disk size of the largest databases", f)
+      fam("kazoo_couchdb_database_active_bytes", "Live data in the largest databases", a)
+      fam("kazoo_couchdb_database_docs", "Documents in the largest databases", d)
+      fam("kazoo_couchdb_database_deleted_docs", "Deleted documents (tombstones) in the largest databases", x)
+    }'
 }
 
 rabbit_metrics() {
@@ -256,7 +276,8 @@ freeswitch_metrics() {
 
 valkey_metrics() {
   local c info up=0 cli
-  c=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'valkey|redis' | grep -v sentinel | head -1)
+  # Prefer a valkey container: other apps may run their own redis (e.g. fonouc-cx-channels-redis).
+  c=${VALKEY_CONTAINER:-$(docker ps --format '{{.Names}}' 2>/dev/null | grep -v sentinel | grep -m1 valkey)}
   [ -n "$c" ] || return
   cli=valkey-cli; docker exec "$c" sh -c 'command -v valkey-cli' >/dev/null 2>&1 || cli=redis-cli
   info=$(timeout 10 docker exec ${VALKEY_PASS:+-e REDISCLI_AUTH="$VALKEY_PASS"} "$c" $cli $VALKEY_CLI_ARGS INFO everything 2>/dev/null | tr -d '\r') &&
@@ -316,7 +337,7 @@ valkey_metrics() {
 # sentinels agree. A failover shows up as a new addr label on kazoo_valkey_sentinel_master_info.
 valkey_sentinel_metrics() {
   local c out up=0 cli=valkey-cli
-  c=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'valkey|redis' | grep sentinel | head -1)
+  c=${VALKEY_SENTINEL_CONTAINER:-$(docker ps --format '{{.Names}}' 2>/dev/null | grep sentinel | grep -m1 -E 'valkey|redis')}
   [ -n "$c" ] || return
   docker exec "$c" sh -c 'command -v valkey-cli' >/dev/null 2>&1 || cli=redis-cli
   out=$(timeout 10 docker exec ${VALKEY_SENTINEL_PASS:+-e REDISCLI_AUTH="$VALKEY_SENTINEL_PASS"} "$c" $cli $VALKEY_SENTINEL_ARGS SENTINEL masters 2>/dev/null | tr -d '\r') &&
@@ -342,16 +363,215 @@ valkey_sentinel_metrics() {
     }'
 }
 
+# ---------------------------------------------------------------------------
+# Per-service memory, CPU, I/O and pressure from cgroup v2: every Docker container and
+# every systemd service above CGROUP_MIN_MB. Pressure (PSI) is the time tasks in that
+# service were stalled waiting for memory/CPU/IO, i.e. real contention, not just usage.
+cgroup_metrics() {
+  local root=/sys/fs/cgroup/system.slice d name svc ids
+  [ -r "$root/cgroup.procs" ] || return
+  ids=$(docker ps --no-trunc --format '{{.ID}} {{.Names}}' 2>/dev/null)
+  for d in "$root"/*.service "$root"/docker-*.scope; do
+    [ -r "$d/memory.current" ] || continue
+    name=${d##*/}
+    case "$name" in
+      docker-*.scope) name=$(printf '%s\n' "$ids" | awk -v id="${name#docker-}" '$1 ".scope" == id { print $2 }'); [ -n "$name" ] || continue ;;
+      *) [ "$(cat "$d/memory.current")" -ge $((CGROUP_MIN_MB * 1048576)) ] || continue; name=${name%.service} ;;
+    esac
+    case "$name" in
+      *couch*) svc=couchdb ;; *rabbit*) svc=rabbitmq ;; *freeswitch*) svc=freeswitch ;;
+      *kazoo_apps*|*kazoo-applications*|*ecallmgr*) svc=kazoo ;; *valkey*|*redis*) svc=valkey ;;
+      *kamailio*) svc=kamailio ;; *haproxy*) svc=haproxy ;; systemd-journald|rsyslog) svc=logging ;;
+      fonouc*|gorec|goportal*) svc=fonouc-apps ;; docker|containerd|node-exporter|*node_exporter*) svc=platform ;; *) svc=other ;;
+    esac
+    printf '%s %s %s\n' "$d" "$(esc "$name")" "$svc"
+  done | while read -r d name svc; do
+    l="cgroup=\"$name\",service=\"$svc\""
+    awk -v l="$l" -v d="$d" '
+      FILENAME ~ /memory.current$/ { print "M kazoo_cgroup_memory_bytes{" l ",type=\"total\"} " $1 }
+      FILENAME ~ /memory.peak$/    { print "M kazoo_cgroup_memory_peak_bytes{" l "} " $1 }
+      FILENAME ~ /memory.max$/     { print "M kazoo_cgroup_memory_max_bytes{" l "} " ($1 == "max" ? 0 : $1) }
+      FILENAME ~ /memory.high$/    { print "M kazoo_cgroup_memory_high_bytes{" l "} " ($1 == "max" ? 0 : $1) }
+      FILENAME ~ /memory.swap.current$/ { print "M kazoo_cgroup_swap_bytes{" l "} " $1 }
+      FILENAME ~ /memory.stat$/ && $1 ~ /^(anon|file|kernel|shmem|sock|active_file|inactive_file)$/ { print "M kazoo_cgroup_memory_bytes{" l ",type=\"" $1 "\"} " $2 }
+      FILENAME ~ /memory.events$/  { print "C kazoo_cgroup_memory_events_total{" l ",event=\"" $1 "\"} " $2 }
+      FILENAME ~ /pressure$/ {
+        r = FILENAME; sub(/.*\//, "", r); sub(/\.pressure$/, "", r)
+        for (i = 2; i <= NF; i++) if ($i ~ /^total=/) { split($i, t, "="); printf "P kazoo_cgroup_pressure_seconds_total{%s,resource=\"%s\",kind=\"%s\"} %.6f\n", l, r, $1, t[2] / 1e6 }
+      }
+      FILENAME ~ /cpu.stat$/ && $1 == "usage_usec"     { printf "U kazoo_cgroup_cpu_seconds_total{%s} %.6f\n", l, $2 / 1e6 }
+      FILENAME ~ /cpu.stat$/ && $1 == "throttled_usec" { printf "T kazoo_cgroup_cpu_throttled_seconds_total{%s} %.6f\n", l, $2 / 1e6 }
+      FILENAME ~ /io.stat$/ { for (i = 2; i <= NF; i++) { split($i, kv, "="); if (kv[1] == "rbytes") rb += kv[2]; if (kv[1] == "wbytes") wb += kv[2] } }
+      FILENAME ~ /pids.current$/ { print "N kazoo_cgroup_pids{" l "} " $1 }
+      END { print "I kazoo_cgroup_io_bytes_total{" l ",direction=\"read\"} " rb + 0; print "I kazoo_cgroup_io_bytes_total{" l ",direction=\"write\"} " wb + 0 }
+    ' $(for f in memory.current memory.peak memory.max memory.high memory.swap.current memory.stat memory.events memory.pressure cpu.pressure io.pressure cpu.stat io.stat pids.current; do [ -r "$d/$f" ] && printf "%s " "$d/$f"; done) 2>/dev/null
+  done | LC_ALL=C sort -s -k2,2 | awk '
+    # Group samples by family (the sort keeps each family contiguous) and add HELP/TYPE once.
+    { split($2, n, "{"); if (n[1] != last) { last = n[1]
+        t = ($1 == "C" || $1 == "P" || $1 == "U" || $1 == "T" || $1 == "I") ? "counter" : "gauge"
+        print "# TYPE " n[1] " " t }
+      print $2, $3 }'
+}
+
+# Bytes appended to a log since the previous run, preceded by a "#EL <seconds>" line
+# (time since the previous run, to turn counts into per-minute rates). The offset is kept
+# in STATE_DIR; the first run only records the end of the file; rotation restarts at 0;
+# reads are capped at LOG_MAX_BYTES. With --stdout nothing is written anywhere: the last
+# LOG_SAMPLE_BYTES are analysed as if they were one minute of log.
+log_new() {
+  local file=$1 st="$STATE_DIR/$2.offset" size off ts now
+  size=$(stat -c %s "$file" 2>/dev/null) || return
+  now=$(date +%s)
+  if [ "$STDOUT" = 1 ]; then echo "#EL 60"; tail -c "$LOG_SAMPLE_BYTES" "$file"; return; fi
+  read -r off ts 2>/dev/null < "$st"
+  mkdir -p "$STATE_DIR" && echo "$size $now" > "$st"
+  case "$off$ts" in ''|*[!0-9]*) return ;; esac
+  [ "$size" -lt "$off" ] && off=0
+  [ $((size - off)) -gt "$LOG_MAX_BYTES" ] && off=$((size - LOG_MAX_BYTES))
+  echo "#EL $((now - ts > 0 ? now - ts : 60))"
+  tail -c +$((off + 1)) "$file" | head -c $((size - off))
+}
+
+# Shared awk helpers. sig() turns a message into a short signature (ids, numbers, IPs -> #,
+# Erlang cookie redacted). top() prints the most frequent signatures as "E <sample>" lines;
+# level counts are printed as "L <sample>" lines. logs_metrics() groups both families.
+LOG_AWK='
+NR == 1 && $1 == "#EL" { rate = 60 / $2; next }
+function sig(s) {
+  gsub(/cookie matches '"'"'[^'"'"']*'"'"'/, "cookie matches <redacted>", s)
+  gsub(/<[0-9.]+>/, "<pid>", s)
+  gsub(/\{[^}]*\}?/, "{...}", s)
+  gsub(/[0-9a-fA-F]*[0-9][0-9a-fA-F]*/, "#", s)
+  gsub(/[\\"]/, "", s); gsub(/[^ -~]/, "", s); gsub(/  +/, " ", s); sub(/^ /, "", s)
+  return substr(s, 1, 110)
+}
+function top(svc, m,   k, n, i, j, key, cnt, t) {
+  n = 0; for (k in errs) { n++; key[n] = k; cnt[n] = errs[k] }
+  for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++) if (cnt[j] > cnt[i]) { t = cnt[i]; cnt[i] = cnt[j]; cnt[j] = t; t = key[i]; key[i] = key[j]; key[j] = t }
+  for (i = 1; i <= n && i <= m; i++) printf "E kazoo_log_top_errors_per_min{service=\"%s\",signature=\"%s\"} %.2f\n", svc, key[i], cnt[i] * rate
+}
+function levels(svc,   k) { for (k in lv) if (k ~ /^[a-z]+$/) printf "L kazoo_log_lines_per_min{service=\"%s\",level=\"%s\"} %.2f\n", svc, k, lv[k] * rate }
+'
+
+# CouchDB access log: per-database requests, latency, time spent and errors, plus log
+# levels and top error/warning messages. Our own requests (to :5984) are excluded.
+couch_log_metrics() {
+  [ -r "$COUCH_LOG" ] || return
+  log_new "$COUCH_LOG" couchdb | awk -v topn="$COUCH_TOP_DBS" "$LOG_AWK"'
+    function dec(p) { gsub(/%2[Ff]/, "/", p); return p }
+    { l = $1; gsub(/[][]/, "", l); lv[l]++ }
+    $1 == "[notice]" && $9 ~ /^(GET|PUT|POST|DELETE|HEAD|COPY)$/ && $12 == "ok" && $6 !~ /:5984$/ {
+      p = $10; sub(/\?.*/, "", p); split(p, seg, "/"); db = dec(seg[2])
+      if (db == "") db = "_root"; else if (db ~ /^_/) db = "_system"
+      n[db]++; ms[db] += $13; if ($13 + 0 > mx[db] + 0) mx[db] = $13
+      if ($11 == "404") nf[db]++; else if ($11 ~ /^4/) e4[db]++; else if ($11 ~ /^5/) e5[db]++
+      meth[$9]++; code[$11]++; tot++; totms += $13
+      next
+    }
+    $1 ~ /^\[(error|warning|critical|alert|emergency)\]$/ { m = ""; for (i = 6; i <= NF; i++) m = m " " $i; errs[sig(m)]++ }
+    END {
+      if (!rate) exit
+      print "# HELP kazoo_couchdb_requests_per_min HTTP requests per minute (access log)"
+      print "# TYPE kazoo_couchdb_requests_per_min gauge"
+      printf "kazoo_couchdb_requests_per_min %.2f\n", tot * rate
+      print "# TYPE kazoo_couchdb_request_ms_avg gauge"
+      printf "kazoo_couchdb_request_ms_avg %.2f\n", tot ? totms / tot : 0
+      print "# TYPE kazoo_couchdb_requests_by_method_per_min gauge"
+      for (k in meth) printf "kazoo_couchdb_requests_by_method_per_min{method=\"%s\"} %.2f\n", k, meth[k] * rate
+      print "# TYPE kazoo_couchdb_responses_by_code_per_min gauge"
+      for (k in code) printf "kazoo_couchdb_responses_by_code_per_min{code=\"%s\"} %.2f\n", k, code[k] * rate
+      # Busiest databases by request count, plus any database returning 5xx.
+      c = 0; for (k in n) { c++; dk[c] = k; dn[c] = n[k] }
+      for (i = 1; i <= c; i++) for (j = i + 1; j <= c; j++) if (dn[j] > dn[i]) { t = dn[i]; dn[i] = dn[j]; dn[j] = t; t = dk[i]; dk[i] = dk[j]; dk[j] = t }
+      for (i = 1; i <= c; i++) if (i <= topn || e5[dk[i]] > 0) keep[dk[i]] = 1
+      print "# HELP kazoo_couchdb_db_requests_per_min Requests per minute per database"
+      print "# TYPE kazoo_couchdb_db_requests_per_min gauge"
+      for (k in keep) printf "kazoo_couchdb_db_requests_per_min{db=\"%s\"} %.2f\n", k, n[k] * rate
+      print "# HELP kazoo_couchdb_db_time_ms_per_min Request time spent per database in ms per minute: its share of CouchDB work"
+      print "# TYPE kazoo_couchdb_db_time_ms_per_min gauge"
+      for (k in keep) printf "kazoo_couchdb_db_time_ms_per_min{db=\"%s\"} %.2f\n", k, ms[k] * rate
+      print "# TYPE kazoo_couchdb_db_request_ms_avg gauge"
+      for (k in keep) printf "kazoo_couchdb_db_request_ms_avg{db=\"%s\"} %.2f\n", k, ms[k] / n[k]
+      print "# TYPE kazoo_couchdb_db_request_ms_max gauge"
+      for (k in keep) printf "kazoo_couchdb_db_request_ms_max{db=\"%s\"} %d\n", k, mx[k]
+      print "# TYPE kazoo_couchdb_db_errors_per_min gauge"
+      for (k in keep) {
+        printf "kazoo_couchdb_db_errors_per_min{db=\"%s\",class=\"404\"} %.2f\n", k, nf[k] * rate
+        printf "kazoo_couchdb_db_errors_per_min{db=\"%s\",class=\"4xx\"} %.2f\n", k, e4[k] * rate
+        printf "kazoo_couchdb_db_errors_per_min{db=\"%s\",class=\"5xx\"} %.2f\n", k, e5[k] * rate
+      }
+      levels("couchdb"); top("couchdb", 10)
+    }'
+}
+
+# Kazoo crossbar API ("GET request fulfilled in 66 ms") and failure lines from kazoo.log
+# (syslog, no level field): signature = module + message.
+kazoo_log_metrics() {
+  [ -r "$KAZOO_LOG" ] || return
+  log_new "$KAZOO_LOG" kazoo | awk "$LOG_AWK"'
+    / request fulfilled in [0-9]+ ms/ {
+      for (i = 2; i <= NF; i++) if ($i == "request" && $(i + 1) == "fulfilled") { m = $(i - 1); t = $(i + 3) }
+      n[m]++; s[m] += t; if (t + 0 > mx[m] + 0) mx[m] = t
+    }
+    /2600hz/ { if ($0 ~ /(error|crash|exception|badmatch|badarg|undef|function_clause|timeout|failed|unable to|exit with reason)/) {
+        lv["error"]++; m = $0; sub(/^[^|]*\|[^|]*\|/, "", m); sub(/:[0-9]+\(<[0-9.]+>\)/, "", m); errs[sig(m)]++
+      } else lv["info"]++ }
+    END {
+      if (!rate) exit
+      print "# HELP kazoo_api_requests_per_min Kazoo API requests per minute by method"
+      print "# TYPE kazoo_api_requests_per_min gauge"
+      for (k in n) printf "kazoo_api_requests_per_min{method=\"%s\"} %.2f\n", k, n[k] * rate
+      print "# TYPE kazoo_api_request_ms_avg gauge"
+      for (k in n) printf "kazoo_api_request_ms_avg{method=\"%s\"} %.2f\n", k, s[k] / n[k]
+      print "# TYPE kazoo_api_request_ms_max gauge"
+      for (k in n) printf "kazoo_api_request_ms_max{method=\"%s\"} %d\n", k, mx[k]
+      levels("kazoo"); top("kazoo", 10)
+    }'
+}
+
+rabbit_log_metrics() {
+  [ -r "$RABBIT_LOG" ] || return
+  log_new "$RABBIT_LOG" rabbitmq | awk "$LOG_AWK"'
+    match($0, / \[[a-z]+\] /) { l = substr($0, RSTART + 2, RLENGTH - 4); lv[l]++
+      if (l ~ /^(error|warning|critical)$/) { m = substr($0, RSTART + RLENGTH); errs[sig(m)]++ } }
+    END { if (!rate) exit; levels("rabbitmq"); top("rabbitmq", 10) }'
+}
+
+freeswitch_log_metrics() {
+  [ -r "$FS_ERROR_LOG" ] || return
+  log_new "$FS_ERROR_LOG" freeswitch | awk "$LOG_AWK"'
+    match($0, /\[[A-Z]+\] /) { l = tolower(substr($0, RSTART + 1, RLENGTH - 3)); lv[l]++; errs[sig(substr($0, RSTART + RLENGTH))]++ }
+    END { if (!rate) exit; levels("freeswitch"); top("freeswitch", 10) }'
+}
+
+# Runs the log analysers; level counts and top errors from all of them form two shared
+# families, so they are collected ("L"/"E" lines) and printed together.
+logs_metrics() {
+  [ "$LOG_METRICS" = 1 ] || return
+  { couch_log_metrics; kazoo_log_metrics; rabbit_log_metrics; freeswitch_log_metrics; } | awk '
+    $1 == "L" { sub(/^L /, ""); L[++nl] = $0; next }
+    $1 == "E" { sub(/^E /, ""); E[++ne] = $0; next }
+    { print }
+    END {
+      print "# HELP kazoo_log_lines_per_min Log lines per minute by service and level"
+      print "# TYPE kazoo_log_lines_per_min gauge"
+      for (i = 1; i <= nl; i++) print L[i]
+      print "# HELP kazoo_log_top_errors_per_min Most frequent error/warning messages (normalised) per minute"
+      print "# TYPE kazoo_log_top_errors_per_min gauge"
+      for (i = 1; i <= ne; i++) print E[i]
+    }'
+}
+
 gen() {
   local start=$SECONDS
-  docker_metrics; couch_metrics; rabbit_metrics; freeswitch_metrics; valkey_metrics; valkey_sentinel_metrics
+  docker_metrics; cgroup_metrics; couch_metrics; rabbit_metrics; freeswitch_metrics; valkey_metrics; valkey_sentinel_metrics; logs_metrics
   meta kazoo_service_metrics_duration_seconds gauge "Time taken by the collector run"
   echo "kazoo_service_metrics_duration_seconds $((SECONDS - start))"
 }
 
 mode=gen; out=$OUT_DIR/kazoo_services.prom
 if [ "$1" = "--couch-sizes" ]; then mode=couch_size_metrics; out=$OUT_DIR/kazoo_couchdb_sizes.prom; shift; fi
-if [ "$1" = "--stdout" ]; then $mode; exit; fi
+if [ "$1" = "--stdout" ]; then STDOUT=1; $mode; exit; fi
 mkdir -p "$OUT_DIR"
 # Skip the run if the previous one is still going (e.g. docker hung).
 exec 9>"/run/lock/$(basename "$out").lock"

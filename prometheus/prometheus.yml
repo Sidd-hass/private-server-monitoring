@@ -61,16 +61,6 @@ scrape_configs:
           server_name: '181.214.10.246'
           os: 'debian'
 
-  # RabbitMQ built-in Prometheus plugin (rabbitmq-plugins enable rabbitmq_prometheus).
-  # Targets are kept in a subdirectory so the debian_servers '*.json' glob
-  # does not pick them up as node_exporter targets.
-  - job_name: 'rabbitmq'
-    metrics_path: /metrics
-    file_sd_configs:
-      - files:
-          - '/etc/prometheus/targets/rabbitmq/*.json'
-        refresh_interval: 1m
-
   # ICMP ping checks
   - job_name: 'blackbox_ping'
     metrics_path: /probe

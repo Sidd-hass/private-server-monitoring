@@ -213,22 +213,12 @@ groups:
           description: "freeswitch_trunk.prom on {{ $labels.server_name }} has not been updated for {{ $value | humanizeDuration }}. Check the fs_trunk_metrics cron job (journalctl -u cron)."
 
   # ---------------------------------------------------------------------------
-  # RabbitMQ (Kazoo message bus), from the built-in rabbitmq_prometheus plugin.
-  # Kazoo nodes relay it through kazoo_service_metrics.sh (node_exporter
-  # textfile); a direct scrape uses targets/rabbitmq/*.json.
+  # RabbitMQ (Kazoo message bus), from the built-in rabbitmq_prometheus plugin,
+  # relayed by kazoo_service_metrics.sh through each node's node_exporter.
   # rabbitmq_queue_* on /metrics are node-wide totals across all queues.
   # ---------------------------------------------------------------------------
   - name: rabbitmq_alerts
     rules:
-      - alert: RabbitMQDown
-        expr: up{job="rabbitmq"} == 0
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "RabbitMQ metrics unreachable on {{ $labels.server_name }} ({{ $labels.instance }})"
-          description: "Prometheus cannot scrape RabbitMQ on {{ $labels.server_name }}. The broker or its rabbitmq_prometheus plugin is down."
-
       - alert: RabbitMQQueueBacklog
         expr: sum by (instance, server_name) (rabbitmq_queue_messages) > 1000
         for: 10m
@@ -322,7 +312,7 @@ groups:
           severity: warning
         annotations:
           summary: "CouchDB uses {{ $value | humanizePercentage }} of the root disk on {{ $labels.server_name }}"
-          description: "CouchDB data on {{ $labels.server_name }} has grown past 60% of the root filesystem. Check the largest databases on the Kazoo CouchDB dashboard and compaction/MODB retention."
+          description: "CouchDB data on {{ $labels.server_name }} has grown past 60% of the root filesystem. Check the Databases table on the Kazoo Platform Health dashboard and compaction/MODB retention."
 
       - alert: CouchDBSlowRequests
         expr: kazoo_couchdb_stat_recent{stat="couchdb.request_time", q="0.95"} > 500
@@ -438,6 +428,54 @@ groups:
         annotations:
           summary: "Valkey master {{ $labels.master }} changed ({{ $labels.server_name }})"
           description: "Sentinel on {{ $labels.server_name }} reported more than one master address or state for {{ $labels.master }} in the last 10 minutes: a failover or master flapping."
+
+  # Per-service pressure (cgroup v2, from kazoo_service_metrics.sh): which service is
+  # short of memory/CPU before the whole host is.
+  - name: kazoo_service_pressure_alerts
+    rules:
+      - alert: ServiceMemoryPressure
+        expr: rate(kazoo_cgroup_pressure_seconds_total{resource="memory", kind="some"}[5m]) > 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.cgroup }} is short of memory on {{ $labels.server_name }}"
+          description: "{{ $labels.cgroup }} ({{ $labels.service }}) has spent {{ $value | humanizePercentage }} of the last 10 minutes stalled waiting for memory. It needs more RAM than it is getting (or its limit is too low)."
+
+      - alert: ServiceCpuPressure
+        expr: rate(kazoo_cgroup_pressure_seconds_total{resource="cpu", kind="some"}[5m]) > 0.30
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.cgroup }} is waiting for CPU on {{ $labels.server_name }}"
+          description: "{{ $labels.cgroup }} ({{ $labels.service }}) has had tasks waiting for a CPU {{ $value | humanizePercentage }} of the time for 15 minutes."
+
+      - alert: ServiceOomKill
+        expr: increase(kazoo_cgroup_memory_events_total{event="oom_kill"}[10m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "OOM kill in {{ $labels.cgroup }} on {{ $labels.server_name }}"
+          description: "The kernel killed a process inside {{ $labels.cgroup }} ({{ $labels.service }}) for lack of memory in the last 10 minutes."
+
+      - alert: ServiceNearMemoryLimit
+        expr: kazoo_cgroup_memory_bytes{type="anon"} / on(instance, cgroup) (kazoo_cgroup_memory_max_bytes > 0) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.cgroup }} near its memory limit on {{ $labels.server_name }}"
+          description: "{{ $labels.cgroup }} uses {{ $value | humanizePercentage }} of its memory limit in application memory. Raise the limit or expect OOM kills."
+
+      - alert: HostMemoryHeadroomLow
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Less than 15% memory headroom on {{ $labels.server_name }}"
+          description: "Only {{ $value | humanizePercentage }} of RAM is available on {{ $labels.server_name }}; the plan keeps 15-20% for the kernel and page cache."
 
   - name: custom_nginx_alerts
     rules:

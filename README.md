@@ -176,8 +176,8 @@ To capture a memory baseline on a node (calm vs. peak), run `scripts/capture_mem
 
 ## Kazoo node monitoring (CouchDB, RabbitMQ, Valkey, FreeSWITCH)
 
-Dashboards (Observability folder): **Kazoo Node Health**, **Kazoo CouchDB**, **Kazoo RabbitMQ**, **Kazoo Valkey**.
-Each has `Prometheus` / `Logs` datasource selectors, so they work whatever UID Grafana gave the datasources.
+Dashboard (Observability folder): **Kazoo Platform Health**: host memory headroom and pressure, per-service memory/CPU/IO pressure (cgroup v2), CouchDB per-database size, activity and errors, RabbitMQ, Kazoo API, FreeSWITCH, Valkey/Sentinel, containers and logs.
+It has `Prometheus` / `Logs` datasource selectors, so they work whatever UID Grafana gave the datasources.
 
 **Metrics**: `scripts/kazoo_service_metrics.sh` runs from cron on each node and writes
 `kazoo_*` / `rabbitmq_*` metrics for node_exporter's textfile collector. Settings live in
