@@ -1298,7 +1298,7 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Public & Private Infrastructure Availability",
-  "uid": "pub-priv-infra",
+  "uid": "pub-priv-infra-fleet",
   "version": 5,
   "weekStart": ""
 }
