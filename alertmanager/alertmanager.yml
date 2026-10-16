@@ -10,9 +10,9 @@ route:
   group_interval: 10s
   # An unresolved alert is re-sent every 4h: at most 6 notifications per 24h.
   repeat_interval: 4h
-  # Alerts without a known cluster label: Slack + the original Flock webhook.
+  # Alerts without a known cluster label: Slack + the original (main) Flock channel only.
   receiver: 'combined-notifications'
-  # Each cluster's alerts go to that cluster's Flock channel only (plus Slack).
+  # Each cluster's alerts go to that cluster's Flock channel, the original (main) Flock channel and Slack.
   # Flock webhook URLs live in secrets/flock_channels.env, read by flock-relay.
   routes:
     - matchers: ['cluster = "ucpin"']
@@ -73,38 +73,54 @@ receivers:
     webhook_configs:
       - url: 'http://flock-relay:9099/ucpin'
         send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
+        send_resolved: true
   - name: 'flock-ucdemo'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/ucdemo'
+        send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
         send_resolved: true
   - name: 'flock-ucpmed'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/ucpmed'
         send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
+        send_resolved: true
   - name: 'flock-multicomm'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/multicomm'
+        send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
         send_resolved: true
   - name: 'flock-meydan'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/meydan'
         send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
+        send_resolved: true
   - name: 'flock-shams'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/shams'
+        send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
         send_resolved: true
   - name: 'flock-dubai-south'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/dubai_south'
         send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
+        send_resolved: true
   - name: 'flock-spc'
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/spc'
+        send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
         send_resolved: true
