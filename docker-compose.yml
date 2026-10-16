@@ -53,6 +53,25 @@ services:
       - "--storage.path=/alertmanager"
     networks:
       - monitoring
+    depends_on:
+      - flock-relay
+
+  # Formats Alertmanager notifications for Flock and posts them to the cluster's channel.
+  # Webhook URLs: alertmanager/secrets/flock_channels.env (see alertmanager/flock_channels.env.example).
+  flock-relay:
+    image: python:3.12-alpine
+    container_name: flock-relay
+    restart: unless-stopped
+    command: ["python", "-u", "/app/flock_relay.py"]
+    env_file:
+      - ./alertmanager/secrets/flock_channels.env
+    environment:
+      DISPLAY_TZ: "+05:30"
+      DISPLAY_TZ_NAME: "IST"
+    volumes:
+      - ./alertmanager/flock_relay.py:/app/flock_relay.py:ro
+    networks:
+      - monitoring
 
   grafana:
     image: grafana/grafana:10.4.0
