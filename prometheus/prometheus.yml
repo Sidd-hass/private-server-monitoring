@@ -53,11 +53,13 @@ scrape_configs:
       - targets: ['181.214.10.244:8000']
         labels:
           environment: 'production'
+          cluster: 'multicomm'
           server_name: '181.214.10.244'
           os: 'debian'
       - targets: ['181.214.10.246:8000']
         labels:
           environment: 'production'
+          cluster: 'multicomm'
           server_name: '181.214.10.246'
           os: 'debian'
 
@@ -71,12 +73,14 @@ scrape_configs:
           - '181.214.10.244'
         labels:
           environment: 'production'
+          cluster: 'multicomm'
           server_name: '181.214.10.244'
           os: 'debian'
       - targets:
           - '181.214.10.246'
         labels:
           environment: 'production'
+          cluster: 'multicomm'
           server_name: '181.214.10.246'
           os: 'debian'
       # Tasheel ICMP target disabled:
@@ -797,9 +801,15 @@ scrape_configs:
       - targets:
           - '181.214.10.244:9100'
           - '181.214.10.244:8000'
+        labels:
+          cluster: 'multicomm'
+          server_name: '181.214.10.244'
       - targets:
           - '181.214.10.246:9100'
           - '181.214.10.246:8000'
+        labels:
+          cluster: 'multicomm'
+          server_name: '181.214.10.246'
       # Tasheel TCP probe disabled:
       # - targets:
       #     - '192.168.1.178:9100'
