@@ -2,7 +2,7 @@ groups:
   - name: debian_system_alerts
     rules:
       - alert: CpuSpike
-        expr: 100 - (avg by (instance, server_name) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        expr: 100 - (avg by (cluster, instance, server_name) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
         for: 5m
         labels:
           severity: critical
@@ -113,7 +113,7 @@ groups:
           description: "The kernel killed a process for lack of memory on {{ $labels.server_name }} in the last 10 minutes. Check dmesg / journalctl -k for the victim."
 
       - alert: CpuStealHigh
-        expr: avg by (instance, server_name) (rate(node_cpu_seconds_total{job="debian_servers", mode="steal"}[5m])) * 100 > 10
+        expr: avg by (cluster, instance, server_name) (rate(node_cpu_seconds_total{job="debian_servers", mode="steal"}[5m])) * 100 > 10
         for: 15m
         labels:
           severity: warning
@@ -220,7 +220,7 @@ groups:
   - name: rabbitmq_alerts
     rules:
       - alert: RabbitMQQueueBacklog
-        expr: sum by (instance, server_name) (rabbitmq_queue_messages) > 1000
+        expr: sum by (cluster, instance, server_name) (rabbitmq_queue_messages) > 1000
         for: 10m
         labels:
           severity: warning
@@ -324,7 +324,7 @@ groups:
           description: "95th percentile CouchDB request time on {{ $labels.server_name }} has been above 500 ms for 10 minutes (now {{ $value | printf \"%.0f\" }} ms). Kazoo API and call setup slow down with it."
 
       - alert: CouchDBServerErrors
-        expr: sum by (instance, server_name) (increase(kazoo_couchdb_stat_total{stat=~"couchdb.httpd_status_codes.5.."}[15m])) > 20
+        expr: sum by (cluster, instance, server_name) (increase(kazoo_couchdb_stat_total{stat=~"couchdb.httpd_status_codes.5.."}[15m])) > 20
         labels:
           severity: warning
         annotations:
@@ -422,7 +422,7 @@ groups:
           description: "Only {{ $value }} sentinel(s) watch {{ $labels.master }}, no more than its quorum. Losing one more sentinel prevents automatic failover."
 
       - alert: ValkeyFailover
-        expr: count by (server_name, master) (last_over_time(kazoo_valkey_sentinel_master_info[10m])) > 1
+        expr: count by (cluster, server_name, master) (last_over_time(kazoo_valkey_sentinel_master_info[10m])) > 1
         labels:
           severity: warning
         annotations:
@@ -498,7 +498,7 @@ groups:
           description: "The Nginx web server process on {{ $labels.server_name }} ({{ $labels.instance }}) is unreachable or failing status checks."
 
       - alert: NginxHighHttp5xxErrors
-        expr: sum(rate(custom_nginx_http_requests_total{status_code=~"5.."}[5m])) by (server_name, instance) > 2
+        expr: sum(rate(custom_nginx_http_requests_total{status_code=~"5.."}[5m])) by (cluster, server_name, instance) > 2
         for: 2m
         labels:
           severity: critical
@@ -507,7 +507,7 @@ groups:
           description: "Nginx on {{ $labels.server_name }} ({{ $labels.instance }}) is generating over 2 5xx errors/sec."
 
       - alert: NginxHighHttp4xxErrors
-        expr: sum(rate(custom_nginx_http_requests_total{status_code=~"4.."}[5m])) by (server_name, instance) > 10
+        expr: sum(rate(custom_nginx_http_requests_total{status_code=~"4.."}[5m])) by (cluster, server_name, instance) > 10
         for: 5m
         labels:
           severity: warning
@@ -549,7 +549,7 @@ groups:
           description: "Prometheus cannot scrape Alloy ({{ $labels.instance }}). No new logs are being shipped from this host."
 
       - alert: AlloyDroppingLogs
-        expr: sum by (instance, server_name) (rate(loki_write_dropped_entries_total[5m])) > 0
+        expr: sum by (cluster, instance, server_name) (rate(loki_write_dropped_entries_total[5m])) > 0
         for: 5m
         labels:
           severity: warning
@@ -558,7 +558,7 @@ groups:
           description: "Alloy ({{ $labels.instance }}) is dropping {{ $value | printf \"%.2f\" }} entries/sec because Loki is rejecting or not accepting them."
 
       - alert: LokiServerErrors
-        expr: sum by (instance, route) (rate(loki_request_duration_seconds_count{status_code=~"5.."}[5m])) > 0
+        expr: sum by (cluster, instance, route) (rate(loki_request_duration_seconds_count{status_code=~"5.."}[5m])) > 0
         for: 5m
         labels:
           severity: warning
