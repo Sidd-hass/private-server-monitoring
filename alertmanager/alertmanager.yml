@@ -45,6 +45,9 @@ route:
     - matchers: ['cluster = "spc"']
       receiver: 'flock-spc'
       routes: [*ping_route]
+    - matchers: ['cluster = "tahseel"']
+      receiver: 'flock-tahseel'
+      routes: [*ping_route]
     - matchers:
         - alertname =~ "PublicPingDown|PrivatePingDown|meydanGatewayUnreachable"
       receiver: 'combined-notifications'
@@ -121,6 +124,13 @@ receivers:
     slack_configs: *slack
     webhook_configs:
       - url: 'http://flock-relay:9099/spc'
+        send_resolved: true
+      - url_file: /etc/alertmanager/secrets/flock_webhook_url
+        send_resolved: true
+  - name: 'flock-tahseel'
+    slack_configs: *slack
+    webhook_configs:
+      - url: 'http://flock-relay:9099/tahseel'
         send_resolved: true
       - url_file: /etc/alertmanager/secrets/flock_webhook_url
         send_resolved: true
