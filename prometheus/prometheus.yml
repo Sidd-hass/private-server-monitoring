@@ -26,12 +26,16 @@ scrape_configs:
           cluster: 'multicomm'
           server_name: '181.214.10.246'
           os: 'debian'
-      # Tasheel node-exporter target disabled:
-      # - targets: ['192.168.1.178:9100']
-      #   labels:
-      #     environment: 'production'
-      #     server_name: 'Tahseel'
-      #     os: 'debian'
+      # Tahseel (uc01, 192.168.1.178:9100) sits behind a SonicWall; it reaches us via a
+      # reverse SSH tunnel (autossh on uc01) bound to the host's docker0 IP 172.17.0.1:19100.
+      - targets: ['host.docker.internal:19100']
+        labels:
+          environment: 'production'
+          cluster: 'tahseel'
+          server_name: 'Tahseel'
+          # Keep the real address as instance (NasUsageCritical/NasMountMissing match on it).
+          instance: '192.168.1.178:9100'
+          os: 'debian'
     file_sd_configs:
       - files:
           - '/etc/prometheus/targets/*.json'
@@ -39,13 +43,16 @@ scrape_configs:
     # Fleet targets, including UCPIN, UCDEMO, and UCPMED, are registered in
     # targets/debian_servers.json and inherit cluster/server labels for Grafana.
 
-  # - job_name: 'haproxy_tasheel'
-  #   static_configs:
-  #     - targets: ['192.168.1.178:8404']
-  #       labels:
-  #         environment: 'production'
-  #         server_name: 'Tahseel'
-  #         os: 'debian'
+  # Tahseel HAProxy stats (192.168.1.178:8404), via the same reverse SSH tunnel on 172.17.0.1:18404.
+  - job_name: 'haproxy_tasheel'
+    static_configs:
+      - targets: ['host.docker.internal:18404']
+        labels:
+          environment: 'production'
+          cluster: 'tahseel'
+          server_name: 'Tahseel'
+          instance: '192.168.1.178:8404'
+          os: 'debian'
 
   # Existing custom Nginx Python exporters
   - job_name: 'custom_python_exporter'
@@ -83,7 +90,8 @@ scrape_configs:
           cluster: 'multicomm'
           server_name: '181.214.10.246'
           os: 'debian'
-      # Tasheel ICMP target disabled:
+      # Tasheel ICMP target stays disabled: 192.168.1.178 is behind a SonicWall and only
+      # reachable over a TCP tunnel, so ICMP cannot work; ServerDown (up == 0) covers it.
       # - targets:
       #     - '192.168.1.178'
       #   labels:
@@ -810,7 +818,8 @@ scrape_configs:
         labels:
           cluster: 'multicomm'
           server_name: '181.214.10.246'
-      # Tasheel TCP probe disabled:
+      # Tasheel TCP probe stays disabled: not reachable from blackbox-exporter (see ICMP note);
+      # the debian_servers scrape over the tunnel already covers it.
       # - targets:
       #     - '192.168.1.178:9100'
     relabel_configs:
