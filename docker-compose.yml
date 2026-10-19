@@ -37,7 +37,8 @@ services:
       - monitoring
 
   alertmanager:
-    image: prom/alertmanager:v0.27.0
+    # v0.27.0 panics when a url_file webhook gets a non-2xx reply (main Flock channel); fixed in v0.28.
+    image: prom/alertmanager:v0.28.1
     container_name: alertmanager
     restart: unless-stopped
     user: root
