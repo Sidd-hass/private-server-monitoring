@@ -5,9 +5,9 @@ global:
 route:
   # 'gateway' keeps each SIP trunk in its own group (sj02 carries two trunks).
   group_by: ['alertname', 'server_name', 'instance', 'gateway']
-  # First notification and RESOLVED go out immediately (within ~10s).
-  group_wait: 0s
-  group_interval: 10s
+  # Batch changes: first notification after 30s, further changes in a group at most every 5m.
+  group_wait: 30s
+  group_interval: 5m
   # An unresolved alert is re-sent every 4h: at most 6 notifications per 24h.
   repeat_interval: 4h
   # Alerts without a known cluster label: Slack + the original (main) Flock channel only.

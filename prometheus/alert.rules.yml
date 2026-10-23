@@ -125,37 +125,38 @@ groups:
     rules:
       - alert: meydanGatewayUnreachable
         expr: |
-          (probe_success{job="blackbox_ping_meydan", cluster="meydan"} == 0)
+          (avg_over_time(probe_success{job="blackbox_ping_meydan", cluster="meydan"}[5m]) < 0.5)
           or
           (up{job="blackbox_ping_meydan", cluster="meydan"} == 0)
-        for: 0s
+        for: 3m
         labels:
           severity: critical
         annotations:
           summary: "meydan gateway unreachable: {{ $labels.server_name }}"
-          description: "The ICMP probe for {{ $labels.server_name }} ({{ $labels.instance }}) has failed, or Prometheus cannot scrape the meydan Blackbox Exporter, for at least 1 minute."
+          description: "The ICMP probe for {{ $labels.server_name }} ({{ $labels.instance }}) has failed more than half the time over 5 minutes, or Prometheus cannot scrape the meydan Blackbox Exporter, for at least 3 minutes."
 
   - name: ping_probe_alerts
     rules:
       - alert: PublicPingDown
-        expr: probe_success{job="blackbox_ping_public", cluster=~"meydan|shams|dubai_south|spc"} == 0
-        for: 0s
+        # meydan/shams/spc public IPs do not answer ICMP, so only dubai_south is alerted on.
+        expr: avg_over_time(probe_success{job="blackbox_ping_public", cluster=~"dubai_south"}[5m]) < 0.5
+        for: 3m
         labels:
           severity: critical
           probe_type: public
         annotations:
           summary: "Public ping DOWN: {{ $labels.cluster }} / {{ $labels.server_name }}"
-          description: "The public IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.public_ip }}) has failed."
+          description: "The public IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.public_ip }}) has failed more than half the time over 5 minutes."
 
       - alert: PrivatePingDown
-        expr: probe_success{job="blackbox_ping", cluster=~"meydan|shams|dubai_south|spc"} == 0
-        for: 0s
+        expr: avg_over_time(probe_success{job="blackbox_ping", cluster=~"meydan|shams|dubai_south|spc"}[5m]) < 0.5
+        for: 3m
         labels:
           severity: critical
           probe_type: private
         annotations:
           summary: "Private ping DOWN: {{ $labels.cluster }} / {{ $labels.server_name }}"
-          description: "The private IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.instance }}) has failed."
+          description: "The private IP ping probe for {{ $labels.server_name }} ({{ $labels.cluster }}, {{ $labels.instance }}) has failed more than half the time over 5 minutes."
 
   # ---------------------------------------------------------------------------
   # SIP trunks (fonouc_freeswitch_trunk), from scripts/freeswitch_trunk_metrics.sh
