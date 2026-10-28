@@ -830,6 +830,45 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
+  # ============================================================
+  # SSL CERTIFICATE EXPIRY for the cluster application URLs
+  # (alerts: ssl_certificate_alerts, dashboard: Debian Server Fleet Overview).
+  # All 8 application URLs (UCPIN, UCDEMO, UCPMED, Meydan, Shams, Dubai South, SPC, Tahseel)
+  # live in targets/ssl/urls.json (a subfolder, so the debian_servers *.json glob ignores it).
+  # Edits there are picked up within 5 minutes without a restart.
+  #
+  # Tahseel (ira.ucprem.voicemeetme.com) only resolves inside its SonicWall, so it is probed
+  # through the uc01 reverse SSH tunnel with its own module (__param_module in urls.json).
+  # Add a third forward to the uc01 autossh command:  -R 172.17.0.1:18443:192.168.1.178:443
+  # then set its "reachable" to "yes" in urls.json so a failing check also alerts.
+  # ============================================================
+
+  # Each application URL, fully verified (expiry, trusted chain, name match).
+  - job_name: 'ssl_cert_url'
+    scrape_interval: 5m
+    scrape_timeout: 30s
+    metrics_path: /probe
+    # No job-level "params: module": it would override a target's own __param_module.
+    file_sd_configs:
+      - files: ['/etc/prometheus/targets/ssl/urls.json']
+        refresh_interval: 5m
+    relabel_configs:
+      # module = the target's __param_module (Tahseel), otherwise tls_cert
+      - source_labels: [__param_module]
+        regex: ''
+        target_label: __param_module
+        replacement: 'tls_cert'
+      - source_labels: [__address__]
+        target_label: __param_target
+      # instance = the website, also for Tahseel (whose address is the tunnel endpoint)
+      - source_labels: [domain]
+        target_label: instance
+        replacement: '${1}:443'
+      - target_label: check
+        replacement: 'url'
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   # HTTP endpoint probes
   - job_name: 'blackbox_http'
     metrics_path: /probe

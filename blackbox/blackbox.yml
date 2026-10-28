@@ -20,6 +20,26 @@ modules:
       method: GET
       preferred_ip_protocol: "ip4"
 
+  # SSL certificate checks (probe_ssl_earliest_cert_expiry), used by the ssl_cert_* jobs.
+  # Full verification, so an expired, untrusted or wrong-name cert fails the probe.
+  tls_cert:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      preferred_ip_protocol: "ip4"
+      tls: true
+
+  # Tahseel sits behind a SonicWall; its HTTPS is reached through the uc01 reverse SSH
+  # tunnel (172.17.0.1:18443 -> 192.168.1.178:443), so the expected name is set explicitly.
+  tls_cert_tahseel:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      preferred_ip_protocol: "ip4"
+      tls: true
+      tls_config:
+        server_name: "ira.ucprem.voicemeetme.com"
+
   dns_udp:
     prober: dns
     timeout: 5s

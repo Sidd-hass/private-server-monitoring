@@ -14,11 +14,11 @@
       }
     ]
   },
+  "description": "Debian server fleet overview. Cluster and server selectors are populated from Prometheus labels, including UCPIN, UCDEMO, and UCPMED.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
-  "description": "Debian server fleet overview. Cluster and server selectors are populated from Prometheus labels, including UCPIN, UCDEMO, and UCPMED.",
+  "id": 6,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -75,8 +75,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
+        "h": 12,
+        "w": 24,
         "x": 0,
         "y": 1
       },
@@ -93,7 +93,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -105,8 +107,8 @@
           "editorMode": "code",
           "expr": "up{job=\"debian_servers\",cluster=~\"$cluster\",server_name=~\"$server\"}",
           "instant": true,
-          "range": false,
           "legendFormat": "{{cluster}} - {{server_name}}",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -138,10 +140,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 5,
-        "y": 1
+        "h": 13,
+        "w": 12,
+        "x": 0,
+        "y": 13
       },
       "id": 2,
       "options": {
@@ -156,7 +158,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -168,84 +172,13 @@
           "editorMode": "code",
           "expr": "time() - node_boot_time_seconds{cluster=~\"$cluster\",server_name=~\"$server\"}",
           "instant": true,
-          "range": false,
           "legendFormat": "{{cluster}} - {{server_name}}",
+          "range": false,
           "refId": "A"
         }
       ],
       "title": "System Uptime",
       "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 9,
-        "y": 1
-      },
-      "id": 3,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "100 - (avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"idle\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100)",
-          "instant": true,
-          "range": false,
-          "legendFormat": "{{cluster}} - {{server_name}}",
-          "refId": "A"
-        }
-      ],
-      "title": "CPU Usage",
-      "type": "gauge"
     },
     {
       "datasource": {
@@ -282,13 +215,15 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 14,
-        "y": 1
+        "h": 13,
+        "w": 12,
+        "x": 12,
+        "y": 13
       },
       "id": 4,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -298,7 +233,8 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -310,12 +246,86 @@
           "editorMode": "code",
           "expr": "(1 - (node_memory_MemAvailable_bytes{cluster=~\"$cluster\",server_name=~\"$server\"} / node_memory_MemTotal_bytes{cluster=~\"$cluster\",server_name=~\"$server\"})) * 100",
           "instant": true,
-          "range": false,
           "legendFormat": "{{cluster}} - {{server_name}}",
+          "range": false,
           "refId": "A"
         }
       ],
       "title": "RAM Usage",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 3,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 - (avg by (cluster, server_name) (rate(node_cpu_seconds_total{mode=\"idle\",cluster=~\"$cluster\",server_name=~\"$server\"}[5m])) * 100)",
+          "instant": true,
+          "legendFormat": "{{cluster}} - {{server_name}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage",
       "type": "gauge"
     },
     {
@@ -353,13 +363,15 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 19,
-        "y": 1
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 26
       },
       "id": 5,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -369,7 +381,8 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -381,8 +394,8 @@
           "editorMode": "code",
           "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/\",cluster=~\"$cluster\",server_name=~\"$server\"})",
           "instant": true,
-          "range": false,
           "legendFormat": "{{cluster}} - {{server_name}}",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -395,7 +408,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 33
       },
       "id": 101,
       "title": "CPU & System Load",
@@ -408,11 +421,54 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
           "unit": "percent"
         },
@@ -422,7 +478,7 @@
         "h": 8,
         "w": 14,
         "x": 0,
-        "y": 7
+        "y": 34
       },
       "id": 6,
       "options": {
@@ -432,7 +488,8 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -487,10 +544,54 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 2
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           }
         },
         "overrides": []
@@ -499,7 +600,7 @@
         "h": 8,
         "w": 10,
         "x": 14,
-        "y": 7
+        "y": 34
       },
       "id": 7,
       "options": {
@@ -508,10 +609,12 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
@@ -552,7 +655,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 42
       },
       "id": 102,
       "title": "Memory Breakdown & Disk I/O",
@@ -565,15 +668,54 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
             "stacking": {
               "group": "A",
               "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
           "unit": "bytes"
         },
@@ -583,7 +725,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 43
       },
       "id": 8,
       "options": {
@@ -592,7 +734,8 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -647,10 +790,54 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 2
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
           "unit": "Bps"
         },
@@ -660,7 +847,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 43
       },
       "id": 9,
       "options": {
@@ -670,10 +857,12 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
@@ -705,7 +894,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 51
       },
       "id": 103,
       "title": "Network Post-Mortem & Diagnostics",
@@ -718,10 +907,54 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
-            "lineWidth": 2
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
           "unit": "Bps"
         },
@@ -731,7 +964,7 @@
         "h": 8,
         "w": 14,
         "x": 0,
-        "y": 25
+        "y": 52
       },
       "id": 10,
       "options": {
@@ -741,10 +974,12 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
@@ -777,15 +1012,56 @@
       },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 40,
-            "lineWidth": 1
-          },
-          "unit": "pps",
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pps"
         },
         "overrides": []
       },
@@ -793,7 +1069,7 @@
         "h": 8,
         "w": 10,
         "x": 14,
-        "y": 25
+        "y": 52
       },
       "id": 11,
       "options": {
@@ -803,10 +1079,12 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
@@ -833,16 +1111,16 @@
       "type": "timeseries"
     },
     {
-      "id": 104,
-      "title": "NAS Storage & Health",
-      "type": "row",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
-      }
+        "y": 60
+      },
+      "id": 104,
+      "title": "NAS Storage & Health",
+      "type": "row"
     },
     {
       "datasource": {
@@ -855,6 +1133,8 @@
             "mode": "thresholds"
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -872,9 +1152,7 @@
               }
             ]
           },
-          "unit": "percent",
-          "min": 0,
-          "max": 100
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -882,10 +1160,16 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 34
+        "y": 61
       },
       "id": 12,
       "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -893,12 +1177,9 @@
           "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
         "showThresholdLabels": false,
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
+        "showThresholdMarkers": true,
+        "sizing": "auto",
         "textMode": "auto"
       },
       "pluginVersion": "10.4.0",
@@ -911,8 +1192,8 @@
           "editorMode": "code",
           "expr": "100 * (1 - (node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"} / node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}))",
           "instant": true,
-          "range": false,
           "legendFormat": "{{server_name}} /u2_nas",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -947,10 +1228,14 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 34
+        "y": 61
       },
       "id": 13,
       "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -958,13 +1243,11 @@
           "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
+        "showPercentChange": false,
         "showThresholdLabels": false,
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto"
+        "showThresholdMarkers": true,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -976,8 +1259,8 @@
           "editorMode": "code",
           "expr": "node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
           "instant": true,
-          "range": false,
           "legendFormat": "{{server_name}} free",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -996,7 +1279,6 @@
           },
           "mappings": [
             {
-              "type": "value",
               "options": {
                 "0": {
                   "color": "red",
@@ -1008,9 +1290,12 @@
                   "index": 1,
                   "text": "MOUNTED"
                 }
-              }
+              },
+              "type": "value"
             }
           ],
+          "max": 1,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1024,9 +1309,7 @@
               }
             ]
           },
-          "unit": "short",
-          "min": 0,
-          "max": 1
+          "unit": "short"
         },
         "overrides": []
       },
@@ -1034,10 +1317,14 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 34
+        "y": 61
       },
       "id": 14,
       "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1045,13 +1332,11 @@
           "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
+        "showPercentChange": false,
         "showThresholdLabels": false,
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "value"
+        "showThresholdMarkers": true,
+        "textMode": "value",
+        "wideLayout": true
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -1063,8 +1348,8 @@
           "editorMode": "code",
           "expr": "count(node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}) or vector(0)",
           "instant": true,
-          "range": false,
           "legendFormat": "{{server_name}}",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -1083,7 +1368,6 @@
           },
           "mappings": [
             {
-              "type": "value",
               "options": {
                 "0": {
                   "color": "green",
@@ -1095,7 +1379,8 @@
                   "index": 1,
                   "text": "NAS ALERT FIRING"
                 }
-              }
+              },
+              "type": "value"
             }
           ],
           "thresholds": {
@@ -1119,10 +1404,14 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 34
+        "y": 61
       },
       "id": 15,
       "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1130,13 +1419,11 @@
           "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdMarkers": true,
+        "showPercentChange": false,
         "showThresholdLabels": false,
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "value"
+        "showThresholdMarkers": true,
+        "textMode": "value",
+        "wideLayout": true
       },
       "pluginVersion": "10.4.0",
       "targets": [
@@ -1148,8 +1435,8 @@
           "editorMode": "code",
           "expr": "sum(ALERTS{alertname=~\"Nas.*\",server_name=\"Tahseel\",alertstate=\"firing\"}) or vector(0)",
           "instant": true,
-          "range": false,
           "legendFormat": "NAS alerts",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -1167,9 +1454,50 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
             "lineWidth": 2,
-            "fillOpacity": 10
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
           "unit": "bytes"
         },
@@ -1179,13 +1507,15 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 67
       },
       "id": 16,
       "options": {
         "legend": {
+          "calcs": [],
           "displayMode": "list",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1202,8 +1532,8 @@
           "editorMode": "code",
           "expr": "node_filesystem_size_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"} - node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
           "instant": false,
-          "range": true,
           "legendFormat": "{{server_name}} used",
+          "range": true,
           "refId": "A"
         },
         {
@@ -1214,13 +1544,596 @@
           "editorMode": "code",
           "expr": "node_filesystem_avail_bytes{job=\"debian_servers\",server_name=\"Tahseel\",mountpoint=\"/u2_nas\",fstype=\"cifs\"}",
           "instant": false,
-          "range": true,
           "legendFormat": "{{server_name}} free",
+          "range": true,
           "refId": "B"
         }
       ],
       "title": "NAS Capacity & Free Space Trend",
       "type": "timeseries"
+    },
+    {
+      "id": 105,
+      "title": "SSL Certificate Expiry: Application URLs",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Days until the first application certificate expires. Let's Encrypt renews at 30 days left; the alert fires at 10 days.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "unit": "suffix: days",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 30
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 76
+      },
+      "id": 106,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value",
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "min((probe_ssl_earliest_cert_expiry{job=~\"ssl_cert_.*\"} - time()) / 86400)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Soonest Certificate Expiry",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Application URLs whose certificate expires within 10 days (the SslCertExpiringIn10Days alert threshold).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 76
+      },
+      "id": 107,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value",
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count((probe_ssl_earliest_cert_expiry{job=~\"ssl_cert_.*\"} - time()) < 10 * 86400) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Expiring Within 10 Days",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "URLs that cannot complete a valid TLS handshake: expired, untrusted or wrong-name certificate, or the site is unreachable. Tahseel is not counted while its tunnel is pending.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 76
+      },
+      "id": 108,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value",
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(probe_success{job=~\"ssl_cert_.*\", reachable!~\"no|pending\"} == 0) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Failing TLS Checks",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Application URLs with a certificate reading in the last scrape (of 8).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 76
+      },
+      "id": 109,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value",
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(probe_ssl_earliest_cert_expiry{job=~\"ssl_cert_.*\"}) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "URLs Reporting",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "One row per cluster application URL (all 8), fully verified: expiry, trusted chain, name match. Sorted by days left; red = under 10 days (alert). Tahseel shows TUNNEL PENDING until the uc01 SSH tunnel forwards port 443. Targets: prometheus/targets/ssl/urls.json.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Days left"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "suffix: days"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 10
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 20
+                    },
+                    {
+                      "color": "green",
+                      "value": 30
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expires"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "FAILING"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "OK"
+                      },
+                      "-1": {
+                        "color": "orange",
+                        "index": 2,
+                        "text": "TUNNEL PENDING"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #D"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 81
+      },
+      "id": 110,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Days left",
+            "desc": false
+          }
+        ]
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (project, domain, instance) ((probe_ssl_earliest_cert_expiry{job=\"ssl_cert_url\"} - time()) / 86400)",
+          "instant": true,
+          "range": false,
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (project, domain, instance) (probe_ssl_earliest_cert_expiry{job=\"ssl_cert_url\"} * 1000)",
+          "instant": true,
+          "range": false,
+          "refId": "B",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (project, domain, instance) (probe_success{job=\"ssl_cert_url\", reachable!~\"no|pending\"}) or max by (project, domain, instance) (probe_success{job=\"ssl_cert_url\", reachable=~\"no|pending\"} * 0 - 1)",
+          "instant": true,
+          "range": false,
+          "refId": "C",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (project, domain, instance, issuer) (probe_ssl_last_chain_info{job=\"ssl_cert_url\"})",
+          "instant": true,
+          "range": false,
+          "refId": "D",
+          "format": "table"
+        }
+      ],
+      "title": "SSL Certificate Expiry by Application URL",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "project": 0,
+              "domain": 1,
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "issuer": 5,
+              "instance": 6,
+              "Value #D": 7
+            },
+            "renameByName": {
+              "project": "Project",
+              "domain": "Website",
+              "instance": "Checked at",
+              "issuer": "Issuer",
+              "Value #A": "Days left",
+              "Value #B": "Expires",
+              "Value #C": "Status",
+              "Value #D": ""
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Days left",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "10s",
@@ -1232,57 +2145,66 @@
     "clusters",
     "ucpin",
     "ucdemo",
-    "ucpmed"
+    "ucpmed",
+    "ssl"
   ],
   "templating": {
     "list": [
       {
-        "name": "cluster",
-        "label": "Cluster",
-        "type": "query",
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "Prometheus"
         },
         "definition": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
         "query": {
           "query": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
-        "includeAll": true,
-        "allValue": ".*",
-        "multi": false,
         "refresh": 2,
-        "sort": 1,
-        "hide": 0,
-        "current": {},
-        "options": [],
         "regex": "",
-        "skipUrlSync": false
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
       },
       {
-        "name": "server",
-        "label": "Server",
-        "type": "query",
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "Prometheus"
         },
         "definition": "label_values(up{job=\"debian_servers\", cluster=~\"$cluster\"}, server_name)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Server",
+        "multi": false,
+        "name": "server",
+        "options": [],
         "query": {
           "query": "label_values(up{job=\"debian_servers\", cluster=~\"$cluster\"}, server_name)",
           "refId": "StandardVariableQuery"
         },
-        "includeAll": true,
-        "allValue": ".*",
-        "multi": false,
         "refresh": 2,
-        "sort": 1,
-        "hide": 0,
-        "current": {},
-        "options": [],
         "regex": "",
-        "skipUrlSync": false
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
@@ -1294,5 +2216,6 @@
   "timezone": "browser",
   "title": "Debian Server Fleet Overview",
   "uid": "debian-fleet-overview",
-  "version": 5
+  "version": 9,
+  "weekStart": ""
 }

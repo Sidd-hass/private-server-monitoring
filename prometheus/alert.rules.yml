@@ -566,3 +566,31 @@ groups:
         annotations:
           summary: "Loki is returning 5xx errors on {{ $labels.route }}"
           description: "Loki ({{ $labels.instance }}) has returned server errors on route {{ $labels.route }} for 5 minutes."
+
+  # ---------------------------------------------------------------------------
+  # SSL certificates of the 8 cluster application URLs (job ssl_cert_url, targets in
+  # targets/ssl/urls.json; Tahseel through the uc01 SSH tunnel).
+  # Let's Encrypt renews at 30 days left, so 10 days left means renewal has failed.
+  # ---------------------------------------------------------------------------
+  - name: ssl_certificate_alerts
+    rules:
+      - alert: SslCertExpiringIn10Days
+        expr: (probe_ssl_earliest_cert_expiry{job=~"ssl_cert_.*"} - time()) < 10 * 86400
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSL cert for {{ $labels.domain }} ({{ $labels.project }}) expires in {{ $value | humanizeDuration }}"
+          description: "The SSL certificate for {{ $labels.domain }} ({{ $labels.project }}) has {{ $value | humanizeDuration }} left (alert threshold: 10 days). Let's Encrypt should have renewed it at 30 days left: renew it and check certbot/acme renewal on the {{ $labels.project }} servers."
+
+      - alert: SslCertCheckFailed
+        # An expired, untrusted or wrong-name certificate fails the TLS handshake, so the expiry
+        # date above stops being reported; this alert covers that case and unreachable sites.
+        # reachable="pending" (Tahseel until its tunnel exists) shows on the dashboard only.
+        expr: probe_success{job=~"ssl_cert_.*", reachable!~"no|pending"} == 0
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSL check failing for {{ $labels.domain }} ({{ $labels.project }})"
+          description: "The TLS check for {{ $labels.domain }} ({{ $labels.project }}) has failed for 30 minutes: the certificate is expired, untrusted or for the wrong name, or the site is unreachable from the monitoring server."
