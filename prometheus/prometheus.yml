@@ -9,6 +9,18 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets: ['alertmanager:9093']
+  # The main Flock channel's webhook template reads commonLabels.server_name and rejects
+  # (HTTP 400) any alert group without it, so every alert gets one: instance when the rule
+  # produced none, else "monitoring".
+  alert_relabel_configs:
+    - source_labels: [server_name, instance]
+      regex: ';(.+)'
+      target_label: server_name
+      replacement: '$1'
+    - source_labels: [server_name]
+      regex: ''
+      target_label: server_name
+      replacement: 'monitoring'
 
 scrape_configs:
   # Host operating system telemetry

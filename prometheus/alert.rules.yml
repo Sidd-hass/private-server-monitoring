@@ -307,7 +307,9 @@ groups:
           description: "CouchDB on {{ $labels.server_name }} has not answered on 127.0.0.1:5984 for 2 minutes."
 
       - alert: CouchDBDiskShareHigh
-        expr: kazoo_couchdb_file_bytes_sum / on(instance) node_filesystem_size_bytes{mountpoint="/"} > 0.6
+        # group_left() keeps the CouchDB series' labels (server_name, cluster); without it the
+        # alert only had "instance" and reached neither the cluster channel nor the main Flock channel.
+        expr: kazoo_couchdb_file_bytes_sum / on(instance) group_left() node_filesystem_size_bytes{mountpoint="/"} > 0.6
         for: 30m
         labels:
           severity: warning
@@ -461,7 +463,8 @@ groups:
           description: "The kernel killed a process inside {{ $labels.cgroup }} ({{ $labels.service }}) for lack of memory in the last 10 minutes."
 
       - alert: ServiceNearMemoryLimit
-        expr: kazoo_cgroup_memory_bytes{type="anon"} / on(instance, cgroup) (kazoo_cgroup_memory_max_bytes > 0) > 0.9
+        # group_left() keeps server_name, cluster and the service labels of the left-hand series.
+        expr: kazoo_cgroup_memory_bytes{type="anon"} / on(instance, cgroup) group_left() (kazoo_cgroup_memory_max_bytes > 0) > 0.9
         for: 10m
         labels:
           severity: warning
