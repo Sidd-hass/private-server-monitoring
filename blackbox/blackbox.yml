@@ -29,16 +29,16 @@ modules:
       preferred_ip_protocol: "ip4"
       tls: true
 
-  # Tahseel sits behind a SonicWall; its HTTPS is reached through the uc01 reverse SSH
-  # tunnel (172.17.0.1:18443 -> 192.168.1.178:443), so the expected name is set explicitly.
-  tls_cert_tahseel:
+  # SPC's public IPs drop port 443 from the monitoring server, so SPC is probed on sj03's
+  # OpenVPN address (172.16.200.104); the cert is still verified against the real name.
+  tls_cert_spc:
     prober: tcp
     timeout: 10s
     tcp:
       preferred_ip_protocol: "ip4"
       tls: true
       tls_config:
-        server_name: "ira.ucprem.voicemeetme.com"
+        server_name: "ira-spc-sj.ucprem.voicemeetme.com"
 
   dns_udp:
     prober: dns

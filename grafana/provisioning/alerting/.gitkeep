@@ -1,0 +1,1 @@
+# Empty on purpose: Grafana reads this folder at startup and logs an error when it is missing.

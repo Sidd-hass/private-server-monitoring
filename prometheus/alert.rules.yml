@@ -307,7 +307,9 @@ groups:
           description: "CouchDB on {{ $labels.server_name }} has not answered on 127.0.0.1:5984 for 2 minutes."
 
       - alert: CouchDBDiskShareHigh
-        expr: kazoo_couchdb_file_bytes_sum / on(instance) node_filesystem_size_bytes{mountpoint="/"} > 0.6
+        # group_left() keeps the CouchDB series' labels (server_name, cluster); without it the
+        # alert only had "instance" and reached neither the cluster channel nor the main Flock channel.
+        expr: kazoo_couchdb_file_bytes_sum / on(instance) group_left() node_filesystem_size_bytes{mountpoint="/"} > 0.6
         for: 30m
         labels:
           severity: warning
@@ -461,7 +463,8 @@ groups:
           description: "The kernel killed a process inside {{ $labels.cgroup }} ({{ $labels.service }}) for lack of memory in the last 10 minutes."
 
       - alert: ServiceNearMemoryLimit
-        expr: kazoo_cgroup_memory_bytes{type="anon"} / on(instance, cgroup) (kazoo_cgroup_memory_max_bytes > 0) > 0.9
+        # group_left() keeps server_name, cluster and the service labels of the left-hand series.
+        expr: kazoo_cgroup_memory_bytes{type="anon"} / on(instance, cgroup) group_left() (kazoo_cgroup_memory_max_bytes > 0) > 0.9
         for: 10m
         labels:
           severity: warning
@@ -568,8 +571,40 @@ groups:
           description: "Loki ({{ $labels.instance }}) has returned server errors on route {{ $labels.route }} for 5 minutes."
 
   # ---------------------------------------------------------------------------
+  # Tahseel's certificate cannot be probed by blackbox (its URL only resolves inside the
+  # SonicWall). scripts/ssl_cert_metrics.sh on uc01 publishes it through node_exporter, which
+  # already reaches us over the existing tunnel (172.17.0.1:19100). These rules re-label it as
+  # the blackbox series (job="ssl_cert_url"), so the SSL dashboard and alerts include Tahseel.
+  # ---------------------------------------------------------------------------
+  - name: ssl_certificate_textfile
+    rules:
+      - record: probe_ssl_earliest_cert_expiry
+        expr: max by (domain) (ssl_cert_not_after_timestamp_seconds{job="debian_servers", server_name="Tahseel"} > 0)
+        labels: &tahseel_ssl
+          job: ssl_cert_url
+          cluster: tahseel
+          project: Tahseel
+          instance: ira.ucprem.voicemeetme.com:443
+          check: url
+          reachable: "yes"
+
+      - record: probe_success
+        # 0 if verification failed, or if the cron job has not updated the file for over an hour.
+        expr: |
+          max by (domain) (
+            ssl_cert_check_success{job="debian_servers", server_name="Tahseel"}
+            * on (domain)
+            (time() - ssl_cert_last_check_timestamp_seconds{job="debian_servers", server_name="Tahseel"} < bool 3600)
+          )
+        labels: *tahseel_ssl
+
+      - record: probe_ssl_last_chain_info
+        expr: max by (domain, issuer, subject) (ssl_cert_info{job="debian_servers", server_name="Tahseel"})
+        labels: *tahseel_ssl
+
+  # ---------------------------------------------------------------------------
   # SSL certificates of the 8 cluster application URLs (job ssl_cert_url, targets in
-  # targets/ssl/urls.json; Tahseel through the uc01 SSH tunnel).
+  # targets/ssl/urls.json; Tahseel via the ssl_certificate_textfile rules above).
   # Let's Encrypt renews at 30 days left, so 10 days left means renewal has failed.
   # ---------------------------------------------------------------------------
   - name: ssl_certificate_alerts
@@ -586,7 +621,7 @@ groups:
       - alert: SslCertCheckFailed
         # An expired, untrusted or wrong-name certificate fails the TLS handshake, so the expiry
         # date above stops being reported; this alert covers that case and unreachable sites.
-        # reachable="pending" (Tahseel until its tunnel exists) shows on the dashboard only.
+        # Targets with reachable="no"/"pending" show on the dashboard only.
         expr: probe_success{job=~"ssl_cert_.*", reachable!~"no|pending"} == 0
         for: 30m
         labels:

@@ -1,4 +1,6 @@
 
+// Central monitoring host (multicomm 181.214.10.244): ship its Docker and journal logs to Loki.
+// server_name/cluster match the Prometheus labels for this host.
 discovery.docker "local" {
   host             = "unix:///var/run/docker.sock"
   refresh_interval = "5s"
@@ -19,7 +21,8 @@ loki.source.docker "containers" {
   targets    = discovery.docker.local.targets
   labels     = {
     job         = "docker",
-    server_name = "wsl-test",
+    server_name = "181.214.10.244",
+    cluster     = "multicomm",
   }
   relabel_rules = discovery.relabel.docker_logs.rules
   forward_to    = [loki.write.local.receiver]
@@ -48,7 +51,8 @@ loki.source.journal "system" {
   path = "/var/log/journal"
   labels = {
     job         = "system",
-    server_name = "wsl-test",
+    server_name = "181.214.10.244",
+    cluster     = "multicomm",
   }
   relabel_rules = loki.relabel.journal.rules
   forward_to    = [loki.write.local.receiver]
