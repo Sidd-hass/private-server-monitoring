@@ -1717,7 +1717,7 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
-      "description": "URLs that cannot complete a valid TLS handshake: expired, untrusted or wrong-name certificate, or the site is unreachable. Tahseel is not counted while its tunnel is pending.",
+      "description": "URLs that cannot complete a valid TLS handshake: expired, untrusted or wrong-name certificate, the site is unreachable, or (Tahseel) the uc01 check script has not reported for over an hour.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1853,7 +1853,7 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
-      "description": "One row per cluster application URL (all 8), fully verified: expiry, trusted chain, name match. Sorted by days left; red = under 10 days (alert). Tahseel shows TUNNEL PENDING until the uc01 SSH tunnel forwards port 443. Targets: prometheus/targets/ssl/urls.json.",
+      "description": "One row per cluster application URL (all 8), fully verified: expiry, trusted chain, name match. Sorted by days left; red = under 10 days (alert). Seven are checked by blackbox (prometheus/targets/ssl/urls.json); Tahseel is checked on uc01 by scripts/ssl_cert_metrics.sh and arrives through node_exporter.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -1963,9 +1963,9 @@
                         "text": "OK"
                       },
                       "-1": {
-                        "color": "orange",
+                        "color": "text",
                         "index": 2,
-                        "text": "TUNNEL PENDING"
+                        "text": "NOT CHECKED"
                       }
                     }
                   }

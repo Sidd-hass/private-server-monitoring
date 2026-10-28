@@ -833,14 +833,14 @@ scrape_configs:
   # ============================================================
   # SSL CERTIFICATE EXPIRY for the cluster application URLs
   # (alerts: ssl_certificate_alerts, dashboard: Debian Server Fleet Overview).
-  # All 8 application URLs (UCPIN, UCDEMO, UCPMED, Meydan, Shams, Dubai South, SPC, Tahseel)
-  # live in targets/ssl/urls.json (a subfolder, so the debian_servers *.json glob ignores it).
+  # 7 application URLs (UCPIN, UCDEMO, UCPMED, Meydan, Shams, Dubai South, SPC) live in
+  # targets/ssl/urls.json (a subfolder, so the debian_servers *.json glob ignores it).
   # Edits there are picked up within 5 minutes without a restart.
   #
-  # Tahseel (ira.ucprem.voicemeetme.com) only resolves inside its SonicWall, so it is probed
-  # through the uc01 reverse SSH tunnel with its own module (__param_module in urls.json).
-  # Add a third forward to the uc01 autossh command:  -R 172.17.0.1:18443:192.168.1.178:443
-  # then set its "reachable" to "yes" in urls.json so a failing check also alerts.
+  # Tahseel (ira.ucprem.voicemeetme.com) only resolves inside its SonicWall, so blackbox cannot
+  # reach it. scripts/ssl_cert_metrics.sh on uc01 publishes its expiry through node_exporter
+  # (existing tunnel, 172.17.0.1:19100) and the ssl_certificate_textfile recording rules in
+  # alert.rules.yml add it to the same probe_ssl_* series.
   # ============================================================
 
   # Each application URL, fully verified (expiry, trusted chain, name match).
