@@ -1919,7 +1919,7 @@
       "description": "Tahseel NAS used and free space over the selected time range."
     }
   ],
-  "refresh": "10s",
+  "refresh": "30s",
   "schemaVersion": 39,
   "tags": [
     "debian",
@@ -1955,7 +1955,7 @@
           "query": "label_values(up{job=\"debian_servers\", cluster!=\"\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 2,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
