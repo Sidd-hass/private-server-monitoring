@@ -1,0 +1,30 @@
+# VoIP agent for a trunk node (Meydan: my03, ens19 = du trunk).
+# Copy this folder to the node (e.g. /opt/voip-agent), create .env from .env.example
+# and run: docker compose up -d --build
+services:
+  voip-agent:
+    build: .
+    image: voip-agent:local
+    container_name: voip-agent
+    restart: unless-stopped
+    # Host network: the raw socket needs the real trunk interface, and the API/metrics
+    # listener binds to the node's private IP (LISTEN) like node_exporter does.
+    network_mode: host
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    # RING_MB of RTP in RAM plus Python overhead; the cap keeps it from ever touching FreeSWITCH.
+    mem_limit: ${MEM_LIMIT:-1600m}
+    memswap_limit: ${MEM_LIMIT:-1600m}
+    cpus: 1.0
+    # No volumes: nothing is written to disk.
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    env_file:
+      - .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,186 @@
+// General app-server log shipper: Docker + pm2 (full) and systemd journal (warnings+).
+// Unlike the kazoo-node shipper (errors-only, per-service files), this one is for hosts whose
+// apps run under Docker, pm2 and systemd, giving a server-wise -> app-wise view in Grafana/Loki.
+//
+// Labels produced:
+//   server_name, cluster            (external, from .env - match the Prometheus labels)
+//   job = docker                    + container_name
+//   job = pm2                       + app, stream (out|error)   <- from the pm2 log filename
+//   job = system                    + systemd_unit, transport, priority (warnings and above only)
+//
+// Env (see docker-compose.yml / .env.example): LOKI_URL, SERVER_NAME, CLUSTER.
+// Docker/pm2 ship everything; a high rate cap only guards against a crash-loop log storm.
+
+loki.write "central" {
+  endpoint {
+    url = sys.env("LOKI_URL")
+  }
+  external_labels = {
+    server_name = sys.env("SERVER_NAME"),
+    cluster     = sys.env("CLUSTER"),
+  }
+}
+
+// ---------------------------------------------------------------- Docker (all containers)
+discovery.docker "all" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+discovery.relabel "docker" {
+  targets = discovery.docker.all.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container_name"
+  }
+  // service_name is the label Grafana Logs Drilldown groups by ("service" tab).
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "service_name"
+  }
+}
+
+loki.source.docker "all" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.all.targets
+  labels        = { job = "docker" }
+  relabel_rules = discovery.relabel.docker.rules
+  forward_to    = [loki.process.guardrail.receiver]
+}
+
+// ---------------------------------------------------------------- pm2
+// pm2 writes /path/.pm2/logs/<app>-out.log and <app>-error.log (sometimes <app>-out-<id>.log).
+// PM2_LOG_DIR (.env) is mounted read-only at /pm2logs, so we tail /pm2logs/*.log.
+local.file_match "pm2" {
+  path_targets = [{"__path__" = "/pm2logs/*.log"}]
+}
+
+loki.source.file "pm2" {
+  targets       = local.file_match.pm2.targets
+  tail_from_end = true
+  forward_to    = [loki.process.pm2.receiver]
+}
+
+loki.process "pm2" {
+  stage.static_labels {
+    values = { job = "pm2" }
+  }
+  // Derive app name + stream from the filename, e.g. /pm2logs/api-server-error-0.log
+  stage.regex {
+    source     = "filename"
+    expression = "(?P<app>[^/]+?)-(?P<stream>out|error)(?:-\\d+)?\\.log$"
+  }
+  // Grafana Logs Drilldown groups by service_name; use the pm2 app name for it.
+  stage.template {
+    source   = "service_name"
+    template = "{{ .app }}"
+  }
+  stage.labels {
+    values = { app = "", stream = "", service_name = "" }
+  }
+  stage.limit {
+    rate  = 1000
+    burst = 5000
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- systemd journal (warnings+)
+loki.relabel "journal" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "systemd_unit"
+  }
+  // service_name is the label Grafana Logs Drilldown groups by ("service" tab).
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "service_name"
+  }
+  rule {
+    source_labels = ["__journal__transport"]
+    target_label  = "transport"
+  }
+  // journald PRIORITY is numeric 0..7 (there is no *_keyword meta-label); map it to a
+  // severity keyword so {priority=~"..."} queries and the log dashboard work.
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "0"
+    target_label  = "priority"
+    replacement   = "emerg"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "1"
+    target_label  = "priority"
+    replacement   = "alert"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "2"
+    target_label  = "priority"
+    replacement   = "crit"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "3"
+    target_label  = "priority"
+    replacement   = "err"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "4"
+    target_label  = "priority"
+    replacement   = "warning"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "5"
+    target_label  = "priority"
+    replacement   = "notice"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "6"
+    target_label  = "priority"
+    replacement   = "info"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "7"
+    target_label  = "priority"
+    replacement   = "debug"
+  }
+}
+
+loki.source.journal "system" {
+  path          = "/var/log/journal"
+  labels        = { job = "system" }
+  relabel_rules = loki.relabel.journal.rules
+  forward_to    = [loki.process.journal.receiver]
+}
+
+loki.process "journal" {
+  // Keep warning and above; drop the high-volume info/debug/notice chatter.
+  stage.match {
+    selector = "{job=\"system\", priority=~\"info|debug|notice\"}"
+    action   = "drop"
+  }
+  forward_to = [loki.write.central.receiver]
+}
+
+// ---------------------------------------------------------------- Docker guardrail
+// Ships everything under normal load; the cap only trips during a container crash-loop storm.
+loki.process "guardrail" {
+  stage.limit {
+    rate  = 1000
+    burst = 5000
+    drop  = true
+  }
+  forward_to = [loki.write.central.receiver]
+}

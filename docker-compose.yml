@@ -75,7 +75,7 @@ services:
       - monitoring
 
   grafana:
-    image: grafana/grafana:10.4.0
+    image: grafana/grafana:latest
     container_name: grafana
     restart: unless-stopped
     ports:
@@ -84,6 +84,13 @@ services:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
+      # Viewers keep read-only data access but gain the Explore tab (ad-hoc log/metric queries).
+      - GF_USERS_VIEWERS_CAN_EDIT=true
+      # Lets the "VoIP Calls" dashboard embed the call console (voip/gateway) in a text panel.
+      # Without it Grafana forces iframes to sandbox + credentialless: no scripts, no session
+      # cookie, so the console cannot play audio or check the user's role.
+      # Trade-off: users who can SAVE dashboards (Editor/Admin) can put HTML/JS in text panels.
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana_data:/var/lib/grafana
@@ -164,12 +171,40 @@ services:
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
+    # Log receiver for voip-agent on the trunk nodes (reached over the VPN). Restrict it to tun0:
+    #   iptables -I DOCKER-USER -p tcp --dport 3500 ! -i tun0 -j DROP
+    ports:
+      - "3500:3500"
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - alloy_data:/var/lib/alloy/data
       - /var/log:/var/log:ro
       - /var/run/docker.sock:/var/run/docker.sock
+      # pm2 per-app logs on this host (empty/absent = nothing shipped). Override PM2_LOG_DIR in .env.
+      - ${PM2_LOG_DIR:-/root/.pm2/logs}:/pm2logs:ro
     networks:
       - monitoring
     depends_on:
+      - loki
+
+  # Call listening for Grafana users (voip/gateway): checks the Grafana session and role,
+  # audits every listen to Loki, proxies audio from voip-agent on the trunk nodes (VPN).
+  # Published only through nginx-proxy-manager at https://<grafana host>/voip (custom location).
+  voip-gateway:
+    build: ./voip/gateway
+    image: voip-gateway:local
+    container_name: voip-gateway
+    restart: unless-stopped
+    env_file:
+      - ./voip/gateway/.env
+    environment:
+      GRAFANA_URL: http://grafana:3000
+      LOKI_URL: http://loki:3100/loki/api/v1/push
+    networks:
+      - monitoring
+      - npm
+    ports:
+      - "8090:8090"
+    depends_on:
+      - grafana
       - loki

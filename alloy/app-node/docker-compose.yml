@@ -1,0 +1,31 @@
+# General app-server log shipper (Docker + pm2 + systemd). Copy this folder to the server,
+# create .env next to it (see .env.example), then run: docker compose up -d
+services:
+  alloy:
+    image: grafana/alloy:v1.11.3
+    container_name: app-log-shipper
+    restart: unless-stopped
+    # Host network so the UI/metrics listener stays on 127.0.0.1 and Loki is reached directly.
+    network_mode: host
+    # Hard limits so the shipper can never compete with the apps for memory/CPU.
+    mem_limit: 256m
+    memswap_limit: 256m
+    cpus: 0.5
+    command:
+      - run
+      - --server.http.listen-addr=127.0.0.1:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      LOKI_URL: ${LOKI_URL:?Set LOKI_URL in .env}
+      SERVER_NAME: ${SERVER_NAME:?Set SERVER_NAME in .env}
+      CLUSTER: ${CLUSTER:?Set CLUSTER in .env}
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - /var/log:/var/log:ro                      # systemd journal (/var/log/journal)
+      - ${PM2_LOG_DIR:-/root/.pm2/logs}:/pm2logs:ro   # pm2 per-app log files
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker container logs (read-only API)
+      - alloy_data:/var/lib/alloy/data            # read positions, so restarts do not re-ship/skip
+
+volumes:
+  alloy_data:
