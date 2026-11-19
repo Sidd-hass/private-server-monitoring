@@ -1165,7 +1165,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "10s",
+  "refresh": "30s",
   "schemaVersion": 39,
   "tags": [
     "debian",
@@ -1198,7 +1198,7 @@
           "query": "label_values(up{job=\"debian_servers\",cluster=~\"^(meydan|shams|dubai_south|spc)$\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 2,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,

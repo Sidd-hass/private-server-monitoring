@@ -28,6 +28,12 @@ schema_config:
 
 limits_config:
   retention_period: 336h
+  # VoIP agent call/SIP logs are only kept 2 days. The listening audit (job="voip-audit")
+  # keeps the default retention above.
+  retention_stream:
+    - selector: '{job="voip"}'
+      priority: 1
+      period: 48h
   allow_structured_metadata: true
 
 compactor:

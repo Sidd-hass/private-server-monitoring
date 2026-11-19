@@ -898,3 +898,15 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+
+  # VoIP agent on trunk nodes (voip/agent): calls, SIP codes, RTP quality, RAM ring buffer.
+  # Reached over the VPN like node_exporter. Add a target per trunk node.
+  - job_name: 'voip_agent'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['192.168.99.42:9479']
+        labels:
+          cluster: 'meydan'
+          server_name: 'my03'
+          trunk: 'du_ae_trunk'
+          iface: 'ens19'

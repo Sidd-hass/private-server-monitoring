@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoIP Call Console</title>
+<style>
+  :root { --bg:#f6f7f9; --panel:#fff; --text:#1f2328; --muted:#636c76; --line:#d8dee4; --accent:#1f6feb;
+          --ok:#1a7f37; --warn:#9a6700; --bad:#cf222e; --far:#1f6feb; --our:#bf3989; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111217; --panel:#181b1f; --text:#d8d9da; --muted:#8e8e8e; --line:#2c3235; --accent:#5794f2;
+            --ok:#73bf69; --warn:#fade2a; --bad:#f2495c; --far:#5794f2; --our:#ff7383; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--panel); }
+  header h1 { font-size:16px; margin:0 12px 0 0; }
+  header .grow { flex:1; }
+  select, input, button { font:inherit; color:inherit; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:5px 9px; }
+  button { cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  main { padding:16px; display:grid; gap:16px; max-width:1400px; margin:0 auto; }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; min-width:0; }
+  section h2 { font-size:14px; margin:0 0 8px; display:flex; gap:8px; align-items:baseline; }
+  section h2 small { color:var(--muted); font-weight:normal; }
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:var(--muted); font-weight:600; font-size:12px; }
+  tr.sel td { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  .ok { color:var(--ok); } .warn { color:var(--warn); } .bad { color:var(--bad); } .muted { color:var(--muted); }
+  .pill { display:inline-block; padding:0 7px; border-radius:10px; font-size:12px; border:1px solid currentColor; }
+  #player { display:none; }
+  .meta { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:6px 16px; margin-bottom:10px; }
+  .meta div span { display:block; color:var(--muted); font-size:12px; }
+  canvas { width:100%; height:140px; display:block; background:var(--bg); border-radius:6px; }
+  .legend { display:flex; gap:16px; font-size:12px; color:var(--muted); margin:6px 0; }
+  .legend b { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+  audio { width:100%; margin-top:8px; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
+  details pre { font-size:12px; overflow:auto; max-height:260px; background:var(--bg); padding:8px; border-radius:6px; }
+  #notice { padding:10px 14px; border-radius:6px; display:none; }
+  body.embed { background:transparent; }
+  body.embed header h1 { display:none; }
+  body.embed main { padding:10px 0; max-width:none; }
+  #notice.show { display:block; background:color-mix(in srgb, var(--warn) 18%, transparent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>VoIP Call Console</h1>
+  <label>Node <select id="node"></select></label>
+  <input id="search" type="search" placeholder="Search number or Call-ID" size="28">
+  <span class="grow"></span>
+  <span id="ring" class="muted"></span>
+  <span id="who" class="muted"></span>
+</header>
+<main>
+  <div id="notice"></div>
+
+  <section id="pcapbox">
+    <h2>Download PCAP <small>SIP + RTP for a number in a time range (calls still in the agent's memory) · Editor or Admin</small></h2>
+    <div class="controls">
+      <label>Number <input id="pc-num" placeholder="e.g. 0528368438" size="16"></label>
+      <label>From <input id="pc-from" type="datetime-local" step="1"></label>
+      <label>To <input id="pc-to" type="datetime-local" step="1"></label>
+      <button id="pc-go" class="primary">⬇ Download PCAP</button>
+      <span id="pc-status" class="muted"></span>
+    </div>
+  </section>
+
+  <section id="player">
+    <h2>Player <small id="pl-mode"></small></h2>
+    <div class="meta" id="pl-meta"></div>
+    <div class="legend"><span><b style="background:var(--far)"></b>Far end (du → us), left</span><span><b style="background:var(--our)"></b>Our side (us → du), right</span></div>
+    <canvas id="wave" width="1200" height="140"></canvas>
+    <audio id="audio" controls preload="auto"></audio>
+    <div class="controls">
+      <button id="pl-start" class="primary">▶ Start listening</button>
+      <button id="pl-stop">■ Stop</button>
+      <button id="pl-pcap">⬇ PCAP of this call</button>
+      <span id="pl-status" class="muted"></span>
+    </div>
+    <details><summary>SIP messages</summary><pre id="pl-sip"></pre></details>
+  </section>
+
+  <section>
+    <h2>Live calls <small id="live-count"></small></h2>
+    <div class="scroll"><table><thead><tr><th>Started</th><th>Dir</th><th>From</th><th>To</th><th>State</th><th>Duration</th><th></th></tr></thead><tbody id="live"></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Recent calls <small>replay works while the call is still in the RAM buffer</small></h2>
+    <div class="scroll"><table><thead><tr><th>Ended</th><th>Dir</th><th>From</th><th>To</th><th>Result</th><th>Duration</th><th>Loss in/out</th><th>Hangup</th><th></th></tr></thead><tbody id="recent"></tbody></table></div>
+  </section>
+</main>
+
+<script>
+const BASE = "__BASE__";
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+if (params.get("embed")) document.body.classList.add("embed");
+let ME = null, NODE = params.get("node") || "", current = null, ws = null, ctx = null, rafId = 0;
+
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function hms(sec) { sec = Math.max(0, Math.round(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0"); }
+function clock(ts) { return ts ? new Date(ts * 1000).toLocaleTimeString() : ""; }
+async function api(path) {
+  const r = await fetch(BASE + "/api/" + path, { credentials: "same-origin" });
+  const body = r.headers.get("content-type")?.includes("json") ? await r.json() : null;
+  if (!r.ok) throw Object.assign(new Error(body?.error || ("HTTP " + r.status)), { status: r.status });
+  return body;
+}
+function notice(msg) { $("notice").textContent = msg || ""; $("notice").classList.toggle("show", !!msg); }
+function matches(c) { const q = $("search").value.trim(); return !q || [c.from, c.to, c.call_id].some(v => (v || "").includes(q)); }
+
+async function init() {
+  try { ME = await api("me"); }
+  catch (e) { notice("Log in to Grafana in this browser first, then reload this page."); return; }
+  $("who").textContent = `${ME.login} · ${ME.role}` + (ME.can.live ? " · live + replay" : ME.can.play ? " · replay" : " · no audio");
+  const nodes = await api("nodes");
+  $("node").innerHTML = nodes.map(n => `<option value="${esc(n.node)}">${esc(n.cluster)} / ${esc(n.node)}</option>`).join("");
+  if (nodes.some(n => n.node === NODE)) $("node").value = NODE; NODE = $("node").value;
+  $("node").onchange = () => { NODE = $("node").value; refresh(); };
+  $("search").oninput = refresh;
+  setupPcapBox();
+  refresh(); setInterval(refresh, 5000);
+  if (params.get("call")) openCall(params.get("call"), params.get("mode") === "live" ? "live" : "play");
+}
+
+async function refresh() {
+  try {
+    const [st, live, recent] = await Promise.all([api(`status?node=${NODE}`), api(`calls?node=${NODE}&state=live`), api(`calls?node=${NODE}&state=recent&limit=300`)]);
+    $("ring").textContent = `RAM buffer: last ${hms(st.ring_window_s)} (${(st.ring_bytes / 1048576).toFixed(0)} / ${(st.ring_capacity_bytes / 1048576).toFixed(0)} MB)`;
+    const now = Date.now() / 1000;
+    const lv = live.filter(matches);
+    $("live-count").textContent = `${lv.length} in progress`;
+    $("live").innerHTML = lv.map(c => `<tr class="${current?.call_id === c.call_id ? "sel" : ""}">
+      <td>${clock(c.start)}</td><td>${esc(c.direction)}</td><td>${esc(c.from)}</td><td>${esc(c.to)}</td>
+      <td><span class="pill ${c.state === "answered" ? "ok" : "warn"}">${esc(c.state)}</span></td>
+      <td>${c.answered ? hms(now - c.answered) : "ringing " + hms(now - c.start)}</td>
+      <td>${ME.can.live ? `<button data-id="${esc(c.call_id)}" data-mode="live">🎧 Listen live</button>` : ""} ${ME.can.play ? `<button data-pcap="${esc(c.call_id)}">⬇ PCAP</button>` : ""}</td></tr>`).join("")
+      || `<tr><td colspan="7" class="muted">No calls in progress</td></tr>`;
+    $("recent").innerHTML = recent.filter(matches).map(c => {
+      const q = c.quality || {}, li = q.far_end_to_us?.loss_pct, lo = q.us_to_far_end?.loss_pct;
+      const cls = c.result === "answered" ? "ok" : c.result === "cancelled" ? "warn" : "bad";
+      const lossCls = Math.max(li || 0, lo || 0) > 1 ? "bad" : "";
+      const btn = !ME.can.play ? "" : c.result !== "answered" ? "" : c.audio_available
+        ? `<button data-id="${esc(c.call_id)}" data-mode="play">▶ Play</button>${c.audio_complete ? "" : ' <span class="warn" title="start already left the RAM buffer">partial</span>'}`
+        : `<span class="muted">expired</span>`;
+      const pc = ME.can.play && c.audio_available ? ` <button data-pcap="${esc(c.call_id)}">⬇ PCAP</button>` : "";
+      return `<tr class="${current?.call_id === c.call_id ? "sel" : ""}"><td>${clock(c.end)}</td><td>${esc(c.direction)}</td><td>${esc(c.from)}</td><td>${esc(c.to)}</td>
+        <td><span class="pill ${cls}">${esc(c.result)} ${c.result !== "answered" ? esc(c.code) : ""}</span></td><td>${hms(c.duration_s)}</td>
+        <td class="${lossCls}">${li ?? "–"}% / ${lo ?? "–"}%</td><td>${esc(c.hangup_by)}</td><td>${btn}${pc}</td></tr>`;
+    }).join("") || `<tr><td colspan="9" class="muted">No finished calls yet</td></tr>`;
+    notice("");
+  } catch (e) { notice(e.status === 401 ? "Your Grafana session expired: log in again." : "Cannot reach node " + NODE + ": " + e.message); }
+}
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-id]"); if (b) openCall(b.dataset.id, b.dataset.mode);
+  const p = ev.target.closest("button[data-pcap]"); if (p) downloadPcap({ id: p.dataset.pcap }, p);
+});
+
+// ---------------------------------------------------------------- pcap
+function toLocalInput(ms) { const d = new Date(ms - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 19); }
+async function downloadPcap(query, btn) {
+  const status = btn && btn.id !== "pc-go" ? null : $("pc-status");
+  const say = (t) => { if (status) status.textContent = t; else if (btn) btn.title = t; };
+  if (!ME.can.play) { say("Your Grafana role cannot download call data (Editor or Admin needed)."); return; }
+  const qs = new URLSearchParams({ node: NODE, ...query });
+  say("Building pcap from the agent's memory…"); if (btn) btn.disabled = true;
+  try {
+    const r = await fetch(`${BASE}/api/pcap?${qs}`, { credentials: "same-origin" });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); say(e.error || ("HTTP " + r.status)); if (!status) alert(e.error || ("HTTP " + r.status)); return; }
+    const blob = await r.blob();
+    const name = (r.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/)?.[1] || "calls.pcap";
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    say(`${name}: ${r.headers.get("X-Pcap-Calls")} call(s), ${r.headers.get("X-Pcap-Packets")} packets (${r.headers.get("X-Pcap-Rtp-Packets")} RTP)`);
+  } catch (e) { say(e.message); } finally { if (btn) btn.disabled = false; }
+}
+function setupPcapBox() {
+  const now = Date.now();
+  $("pc-num").value = params.get("number") || "";
+  $("pc-from").value = toLocalInput(+params.get("from") || now - 30 * 60000);
+  $("pc-to").value = toLocalInput(+params.get("to") || now);
+  $("pc-go").disabled = !ME.can.play;
+  $("pc-go").onclick = () => {
+    const num = $("pc-num").value.trim();
+    if (!num.replace(/\D/g, "")) { $("pc-status").textContent = "Enter a phone number."; return; }
+    downloadPcap({ number: num, from: new Date($("pc-from").value).getTime(), to: new Date($("pc-to").value).getTime() }, $("pc-go"));
+  };
+  if (params.get("number")) $("pcapbox").scrollIntoView();
+}
+
+// ---------------------------------------------------------------- player
+async function openCall(id, mode) {
+  stopAll();
+  $("player").style.display = "block";
+  $("pl-mode").textContent = mode === "live" ? "live" : "replay";
+  $("pl-status").textContent = "";
+  $("audio").style.display = mode === "play" ? "block" : "none";
+  $("pl-start").style.display = mode === "live" ? "" : "none";
+  history.replaceState(null, "", `?node=${encodeURIComponent(NODE)}&call=${encodeURIComponent(id)}&mode=${mode}${params.get("embed") ? "&embed=1" : ""}`);
+  let c;
+  try { c = await api(`call?node=${NODE}&id=${encodeURIComponent(id)}`); }
+  catch (e) { $("pl-status").textContent = e.message; return; }
+  current = c;
+  const q = c.quality || {};
+  $("pl-meta").innerHTML = [
+    ["From", c.from], ["To", c.to], ["Direction", c.direction], ["Started", new Date(c.start * 1000).toLocaleString()],
+    ["Result", c.result || c.state], ["Duration", hms(c.duration_s)], ["Codec", (c.codecs || []).join(", ")],
+    ["Loss far end / ours", q.far_end_to_us ? `${q.far_end_to_us.loss_pct}% / ${q.us_to_far_end.loss_pct}%` : "–"],
+    ["Jitter far end / ours", q.far_end_to_us ? `${q.far_end_to_us.jitter_ms} / ${q.us_to_far_end.jitter_ms} ms` : "–"],
+    ["Call-ID", c.call_id]].map(([k, v]) => `<div><span>${k}</span>${esc(v)}</div>`).join("");
+  $("pl-sip").textContent = (c.sip || []).map(m => `${new Date(m.t * 1000).toISOString().slice(11, 23)}  ${m.dir === "out" ? "→" : "←"} ${m.src} → ${m.dst}  ${m.line}`).join("\n");
+  $("pl-start").onclick = () => startLive(id);
+  $("pl-stop").onclick = stopAll;
+  $("pl-pcap").style.display = ME.can.play ? "" : "none";
+  $("pl-pcap").onclick = () => downloadPcap({ id }, $("pl-pcap"));
+  if (mode === "play") playRecorded(id);
+  refresh();
+}
+
+function stopAll() {
+  if (ws) { ws.close(); ws = null; }
+  if (ctx) { ctx.close(); ctx = null; }
+  cancelAnimationFrame(rafId);
+  const a = $("audio"); a.pause(); if (a.src) { URL.revokeObjectURL(a.src); a.removeAttribute("src"); a.load(); }
+}
+
+async function playRecorded(id) {
+  $("pl-status").textContent = "Rebuilding audio from the RAM buffer…";
+  const r = await fetch(`${BASE}/api/audio.wav?node=${NODE}&id=${encodeURIComponent(id)}`, { credentials: "same-origin" });
+  if (!r.ok) { const b = await r.json().catch(() => ({})); $("pl-status").textContent = b.error || ("HTTP " + r.status); return; }
+  const buf = await r.arrayBuffer();
+  const partial = r.headers.get("X-Audio-Complete") === "0";
+  $("pl-status").textContent = `${hms(+r.headers.get("X-Audio-Seconds"))} of audio` + (partial ? " · start of the call already left the buffer" : "");
+  const a = $("audio"); a.src = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+  const decoded = await new AudioContext().decodeAudioData(buf.slice(0));
+  const peaks = [0, 1].map(ch => peaksOf(decoded.numberOfChannels > ch ? decoded.getChannelData(ch) : new Float32Array(1), $("wave").width));
+  const draw = () => { drawOverview(peaks, a.duration ? a.currentTime / a.duration : 0); rafId = requestAnimationFrame(draw); };
+  draw();
+  $("wave").onclick = (ev) => { const r = $("wave").getBoundingClientRect(); if (a.duration) a.currentTime = (ev.clientX - r.left) / r.width * a.duration; };
+  a.play().catch(() => {});
+}
+
+function peaksOf(data, width) {
+  const step = Math.max(1, Math.floor(data.length / width)), out = [];
+  for (let x = 0; x < width; x++) { let max = 0; for (let i = x * step; i < Math.min(data.length, (x + 1) * step); i++) max = Math.max(max, Math.abs(data[i])); out.push(max); }
+  return out;
+}
+function colors() { const s = getComputedStyle(document.documentElement); return [s.getPropertyValue("--far").trim(), s.getPropertyValue("--our").trim(), s.getPropertyValue("--text").trim()]; }
+function drawOverview(peaks, pos) {
+  const cv = $("wave"), g = cv.getContext("2d"), W = cv.width, H = cv.height, [cf, co, ct] = colors();
+  g.clearRect(0, 0, W, H);
+  [[peaks[0], cf, H * 0.27], [peaks[1], co, H * 0.73]].forEach(([p, col, mid]) => {
+    g.fillStyle = col; for (let x = 0; x < W; x++) { const h = Math.max(1, p[x] * H * 0.24); g.fillRect(x, mid - h, 1, h * 2); }
+  });
+  g.fillStyle = ct; g.fillRect(Math.floor(pos * W), 0, 2, H);
+}
+
+function startLive(id) {
+  stopAll();
+  ctx = new AudioContext();
+  const merger = ctx.createChannelMerger(2), analysers = [ctx.createAnalyser(), ctx.createAnalyser()];
+  merger.connect(ctx.destination);
+  analysers.forEach((an, ch) => an.connect(merger, 0, ch));
+  const next = [0, 0];
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  ws = new WebSocket(`${proto}//${location.host}${BASE}/api/live?node=${NODE}&id=${encodeURIComponent(id)}`);
+  ws.binaryType = "arraybuffer";
+  let frames = 0, started = Date.now();
+  $("pl-status").textContent = "Connecting…";
+  ws.onmessage = (ev) => {
+    if (typeof ev.data === "string") {
+      const m = JSON.parse(ev.data);
+      if (m.type === "start") $("pl-status").textContent = "Listening live";
+      if (m.type === "ended") $("pl-status").textContent = "Call ended";
+      if (m.type === "error") $("pl-status").textContent = m.error;
+      return;
+    }
+    const ch = new Uint8Array(ev.data, 0, 1)[0] ? 1 : 0;
+    const pcm = new Int16Array(ev.data.slice(1));
+    const buf = ctx.createBuffer(1, pcm.length, 8000), data = buf.getChannelData(0);
+    for (let i = 0; i < pcm.length; i++) data[i] = pcm[i] / 32768;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    src.connect(analysers[ch]);
+    const now = ctx.currentTime;
+    if (next[ch] < now + 0.05 || next[ch] > now + 1.0) next[ch] = now + 0.15;   // ~150 ms jitter buffer
+    src.start(next[ch]); next[ch] += buf.duration;
+    if (++frames % 50 === 0) $("pl-status").textContent = `Listening live · ${hms((Date.now() - started) / 1000)}`;
+  };
+  ws.onclose = () => { if ($("pl-status").textContent.startsWith("Listening")) $("pl-status").textContent = "Disconnected"; };
+  const cv = $("wave"), g = cv.getContext("2d"), bufs = [new Uint8Array(1024), new Uint8Array(1024)];
+  const draw = () => {
+    const W = cv.width, H = cv.height, cols = colors();
+    g.clearRect(0, 0, W, H);
+    analysers.forEach((an, ch) => {
+      an.getByteTimeDomainData(bufs[ch]); const mid = H * (ch ? 0.73 : 0.27);
+      g.strokeStyle = cols[ch]; g.lineWidth = 2; g.beginPath();
+      for (let i = 0; i < bufs[ch].length; i++) { const x = i / bufs[ch].length * W, y = mid + (bufs[ch][i] - 128) / 128 * H * 0.24; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke();
+    });
+    rafId = requestAnimationFrame(draw);
+  };
+  draw();
+}
+
+init();
+</script>
+</body>
+</html>

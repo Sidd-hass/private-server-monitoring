@@ -3508,7 +3508,7 @@
           "query": "label_values(up{job=\"debian_servers\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 2,
+        "refresh": 1,
         "sort": 1,
         "includeAll": true,
         "allValue": ".*",

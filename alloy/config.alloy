@@ -14,6 +14,12 @@ discovery.relabel "docker_logs" {
     regex         = "/(.*)"
     target_label  = "container_name"
   }
+  // service_name is the label Grafana Logs Drilldown groups by ("service" tab).
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "service_name"
+  }
 }
 
 loki.source.docker "containers" {
@@ -36,14 +42,66 @@ loki.relabel "journal" {
     target_label  = "systemd_unit"
   }
 
+  // service_name is the label Grafana Logs Drilldown groups by ("service" tab).
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "service_name"
+  }
+
   rule {
     source_labels = ["__journal__transport"]
     target_label  = "transport"
   }
 
+  // journald PRIORITY is numeric 0..7 (there is no *_keyword meta-label in Alloy); map it to a
+  // severity keyword so {priority=~"..."} queries and the dashboard panels work.
   rule {
-    source_labels = ["__journal_priority_keyword"]
+    source_labels = ["__journal_priority"]
+    regex         = "0"
     target_label  = "priority"
+    replacement   = "emerg"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "1"
+    target_label  = "priority"
+    replacement   = "alert"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "2"
+    target_label  = "priority"
+    replacement   = "crit"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "3"
+    target_label  = "priority"
+    replacement   = "err"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "4"
+    target_label  = "priority"
+    replacement   = "warning"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "5"
+    target_label  = "priority"
+    replacement   = "notice"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "6"
+    target_label  = "priority"
+    replacement   = "info"
+  }
+  rule {
+    source_labels = ["__journal_priority"]
+    regex         = "7"
+    target_label  = "priority"
+    replacement   = "debug"
   }
 }
 
@@ -58,8 +116,84 @@ loki.source.journal "system" {
   forward_to    = [loki.write.local.receiver]
 }
 
+// ---------------------------------------------------------------- pm2
+// pm2 writes <app>-out.log / <app>-error.log. The pm2 log dir is mounted at /pm2logs
+// (see the alloy volume in docker-compose.yml). If this host runs no pm2 apps, /pm2logs
+// is empty and nothing is shipped. service_name = app -> Grafana Logs Drilldown.
+local.file_match "pm2" {
+  path_targets = [{"__path__" = "/pm2logs/*.log"}]
+}
+
+loki.source.file "pm2" {
+  targets       = local.file_match.pm2.targets
+  tail_from_end = true
+  forward_to    = [loki.process.pm2.receiver]
+}
+
+loki.process "pm2" {
+  stage.static_labels {
+    values = {
+      job         = "pm2",
+      server_name = "181.214.10.244",
+      cluster     = "multicomm",
+    }
+  }
+  stage.regex {
+    source     = "filename"
+    expression = "(?P<app>[^/]+?)-(?P<stream>out|error)(?:-\\d+)?\\.log$"
+  }
+  stage.template {
+    source   = "service_name"
+    template = "{{ .app }}"
+  }
+  stage.labels {
+    values = { app = "", stream = "", service_name = "" }
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+local.file_match "mysql_error" {
+  path_targets = [{
+    "__path__"    = "/var/log/mysql/error.log",
+    "job"         = "database",
+    "database"    = "mysql",
+    "log_type"    = "error",
+    "server_name" = "181.214.10.244",
+    "cluster"     = "multicomm",
+  }]
+}
+
+loki.source.file "mysql_error" {
+  targets    = local.file_match.mysql_error.targets
+  forward_to = [loki.write.local.receiver]
+}
+
 loki.write "local" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
   }
+}
+
+// ---------------------------------------------------------------- VoIP agent (voip/agent)
+// Trunk nodes (Meydan my03 first) push finished calls and SIP messages here over the VPN.
+// Port 3500 is published in docker-compose.yml; allow it only on tun0.
+// Anything that is not job="voip" is dropped, so this port cannot be used to write
+// other streams into Loki.
+loki.relabel "voip" {
+  forward_to = []
+
+  rule {
+    source_labels = ["job"]
+    regex         = "voip"
+    action        = "keep"
+  }
+}
+
+loki.source.api "voip" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port    = 3500
+  }
+  relabel_rules = loki.relabel.voip.rules
+  forward_to    = [loki.write.local.receiver]
 }

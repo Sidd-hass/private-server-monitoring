@@ -629,3 +629,35 @@ groups:
         annotations:
           summary: "SSL check failing for {{ $labels.domain }} ({{ $labels.project }})"
           description: "The TLS check for {{ $labels.domain }} ({{ $labels.project }}) has failed for 30 minutes: the certificate is expired, untrusted or for the wrong name, or the site is unreachable from the monitoring server."
+
+  # ---------------------------------------------------------------------------
+  # VoIP agent on trunk nodes (voip/agent): capture health and the RAM replay window.
+  # ---------------------------------------------------------------------------
+  - name: voip_agent_alerts
+    rules:
+      - alert: VoipAgentDown
+        expr: up{job="voip_agent"} == 0 or voip_agent_up{job="voip_agent"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VoIP agent not capturing on {{ $labels.server_name }}"
+          description: "voip-agent on {{ $labels.server_name }} ({{ $labels.iface }}) has been down or unreachable for 3 minutes: no call tracking, metrics or listening for this trunk. Check 'docker logs voip-agent' on the node."
+
+      - alert: VoipCaptureDropping
+        expr: rate(voip_capture_drops_total{job="voip_agent"}[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VoIP agent dropping packets on {{ $labels.server_name }}"
+          description: "The kernel dropped {{ $value | printf \"%.0f\" }} packets/s for 10 minutes because the agent could not keep up: calls may be missing or have gaps in replayed audio."
+
+      - alert: VoipReplayWindowShort
+        expr: voip_ring_window_seconds{job="voip_agent"} < 900 and voip_ring_bytes{job="voip_agent"} >= 0.95 * voip_ring_capacity_bytes{job="voip_agent"}
+        for: 15m
+        labels:
+          severity: info
+        annotations:
+          summary: "Call replay window under 15 minutes on {{ $labels.server_name }}"
+          description: "Traffic is high enough that the {{ $labels.server_name }} RAM buffer only holds {{ $value | humanizeDuration }} of calls. Raise RING_MB (and MEM_LIMIT) in the agent .env if longer replay is needed."
