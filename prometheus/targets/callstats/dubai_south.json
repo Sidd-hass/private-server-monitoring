@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["192.168.160.6:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "dubai_south",
+      "site": "dubai-south",
+      "server_name": "ds01"
+    }
+  }
+]
