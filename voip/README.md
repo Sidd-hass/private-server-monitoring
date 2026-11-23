@@ -110,7 +110,7 @@ Check first, read-only: ens19 address, the du SIP peer/port and that 244's Loki 
 ```bash
 ip -4 addr show ens19
 timeout 20 tcpdump -ni ens19 -c 20 'udp and not portrange 10000-65535'   # SIP port(s) -> SIP_PORTS
-curl -s -m 5 -o /dev/null -w "loki %{http_code}\n" http://10.200.26.6:3500/ready
+curl -s -m 5 -o /dev/null -w "loki %{http_code}\n" http://10.200.26.4:3500/ready
 free -g; docker --version
 ```
 
@@ -154,7 +154,7 @@ set Console URL to `http://localhost:8090/voip`.
 | `RECENT_CALLS` | 2000 | Finished calls kept in the list (metadata + SIP) |
 | `LISTEN` | 192.168.99.42:9479 | API + metrics, private IP only |
 | `AGENT_TOKEN` | | Shared with the gateway |
-| `LOKI_URL` | 10.200.26.6:3500 | Alloy receiver on 244 over the VPN |
+| `LOKI_URL` | 10.200.26.4:3500 | Alloy receiver on 244 over the VPN |
 
 Codecs: G.711 A-law/µ-law are decoded (the du trunk uses A-law). Other codecs are tracked
 for metrics but have no audio.
