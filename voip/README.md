@@ -19,8 +19,9 @@ Nothing is written to disk on the node: the container is read-only with no volum
 When the ring is full the oldest packets drop out; replay and PCAP audio work while a call is
 still in it (the dashboard's "Replay window" shows how far back that is).
 
-Only my03 runs the agent: it is the only Meydan node with the trunk (ens19 is down on
+Meydan: only my03 runs the agent: it is the only Meydan node with the trunk (ens19 is down on
 my01/my02/my04). ens19 carries the du side only (SIP 10.59.108.25:5060, RTP 10.59.109.x).
+Dubai South: ds02 runs the agent on ens19 (du_ae_trunk 044967600); ds01 is standby.
 
 ## Access
 
@@ -99,6 +100,34 @@ my03's firewall must allow 9479 from the VPN, next to the existing 9100 rule:
 iptables -I INPUT 3 -s 10.200.26.0/23 -d 192.168.99.42/32 -p tcp -m tcp --dport 9479 -m conntrack --ctstate NEW -j ACCEPT
 # and the same line in /etc/iptables/rules.v4
 ```
+
+### 3. ds02 (Dubai South trunk node)
+
+ds02 carries du_ae_trunk (044967600) on ens19; ds01 is standby (its ens19 is down).
+
+Check first, read-only: ens19 address, the du SIP peer/port and that 244's Loki receiver is reachable:
+
+```bash
+ip -4 addr show ens19
+timeout 20 tcpdump -ni ens19 -c 20 'udp and not portrange 10000-65535'   # SIP port(s) -> SIP_PORTS
+curl -s -m 5 -o /dev/null -w "loki %{http_code}\n" http://10.200.26.6:3500/ready
+free -g; docker --version
+```
+
+Then deploy like my03, with `voip/agent/sites/ds02.env.example` as `.env` (same AGENT_TOKEN
+as my03 and the gateway):
+
+```bash
+mkdir -p /opt/voip-agent
+# copy voip/agent/{Dockerfile,agent.py,voipcore.py,docker-compose.yml} and sites/ds02.env.example as .env
+cd /opt/voip-agent && docker compose up -d --build
+docker logs -f voip-agent                        # "capturing on ens19 (…), ring … MB"
+iptables -I INPUT 3 -s 10.200.26.0/23 -d 192.168.160.7/32 -p tcp -m tcp --dport 9479 -m conntrack --ctstate NEW -j ACCEPT
+# and the same line in /etc/iptables/rules.v4, after the 9100 rule
+```
+
+On 244: add `dubai_south/ds02=http://192.168.160.7:9479` to `AGENTS` in `voip/gateway/.env`, then
+`docker compose up -d voip-gateway` and `curl -X POST http://localhost:9090/-/reload`.
 
 ### Local test (WSL)
 

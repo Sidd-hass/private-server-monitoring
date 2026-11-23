@@ -910,6 +910,12 @@ scrape_configs:
           server_name: 'my03'
           trunk: 'du_ae_trunk'
           iface: 'ens19'
+      - targets: ['192.168.160.7:9479']
+        labels:
+          cluster: 'dubai_south'
+          server_name: 'ds02'
+          trunk: 'du_ae_trunk'
+          iface: 'ens19'
 
   # Call statistics per user/agent (rolling 24 h + today) and RabbitMQ queue families, from
   # callstats/ on one Kazoo node per site (Meydan: my01). Reached over the VPN like node_exporter.

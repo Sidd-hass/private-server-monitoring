@@ -1,7 +1,7 @@
 {
   "uid": "voip-calls",
   "title": "VoIP Calls (live listening · SIP · RTP)",
-  "description": "voip-agent on trunk nodes (in-memory capture, no pcap on disk) + voip-gateway call console. Meydan my03 ens19 = du trunk.",
+  "description": "voip-agent on trunk nodes (in-memory capture, no pcap on disk) + voip-gateway call console. Meydan my03 ens19 and Dubai South ds02 ens19 = du trunks.",
   "tags": [
     "voip",
     "sip",
