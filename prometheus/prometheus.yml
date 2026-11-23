@@ -910,3 +910,13 @@ scrape_configs:
           server_name: 'my03'
           trunk: 'du_ae_trunk'
           iface: 'ens19'
+
+  # Call statistics per user/agent (rolling 24 h + today) and RabbitMQ queue families, from
+  # callstats/ on one Kazoo node per site (Meydan: my01). Reached over the VPN like node_exporter.
+  # Targets: targets/callstats/*.json (the local test swaps this directory, see callstats/README.md).
+  - job_name: 'callstats'
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    file_sd_configs:
+      - files: ['/etc/prometheus/targets/callstats/*.json']
+        refresh_interval: 1m

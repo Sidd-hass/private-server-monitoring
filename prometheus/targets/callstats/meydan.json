@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["192.168.99.46:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "meydan",
+      "site": "meydan",
+      "server_name": "my01"
+    }
+  }
+]

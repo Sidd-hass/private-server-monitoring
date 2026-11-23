@@ -1,0 +1,6 @@
+# Local test only: point the "callstats" Prometheus job at the test exporter instead of my01.
+#   docker compose -f docker-compose.yml -f callstats/test/prometheus.override.yml up -d prometheus
+services:
+  prometheus:
+    volumes:
+      - ./callstats/test/targets:/etc/prometheus/targets/callstats:ro

@@ -661,3 +661,55 @@ groups:
         annotations:
           summary: "Call replay window under 15 minutes on {{ $labels.server_name }}"
           description: "Traffic is high enough that the {{ $labels.server_name }} RAM buffer only holds {{ $value | humanizeDuration }} of calls. Raise RING_MB (and MEM_LIMIT) in the agent .env if longer replay is needed."
+
+  # ---------------------------------------------------------------------------
+  # callstats/ exporter: per-user call statistics and RabbitMQ queue families
+  # (job "callstats", Meydan my01). RabbitMQ totals from the same job also feed
+  # the rabbitmq_alerts group above.
+  # ---------------------------------------------------------------------------
+  - name: callstats_alerts
+    rules:
+      - alert: CallStatsExporterDown
+        expr: up{job="callstats"} == 0 or callstats_up{job="callstats"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Call statistics exporter down on {{ $labels.server_name }}"
+          description: "callstats on {{ $labels.server_name }} has not read CouchDB for 5 minutes: the call / agent dashboard is frozen. Check 'docker logs callstats' on the node."
+
+      - alert: CallStatsNoNewCalls
+        expr: time() - max by (cluster, server_name, account) (kazoo_calls_last_cdr_timestamp_seconds{job="callstats", account!~"admin.*"}) > 3600
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No call records for an hour on {{ $labels.cluster }} ({{ $labels.account }})"
+          description: "The newest CDR in account {{ $labels.account }} is {{ $value | humanizeDuration }} old. Either no calls are being completed or Kazoo stopped writing CDRs."
+
+      - alert: CallStatsRabbitMQUnreachable
+        expr: callstats_rabbitmq_up{job="callstats"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ metrics unreachable on {{ $labels.server_name }}"
+          description: "callstats on {{ $labels.server_name }} cannot read rabbitmq_prometheus (:15692) for 5 minutes, so queue monitoring is blind."
+
+      - alert: RabbitMQQueueStuckNoConsumer
+        expr: sum by (cluster, server_name, family) (rabbitmq_queue_family_queues_stuck{job="callstats"}) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ queue with messages and no consumer on {{ $labels.cluster }}"
+          description: "{{ $value | printf \"%.0f\" }} queue(s) of family {{ $labels.family }} have held messages with no consumer for 10 minutes. Nothing will ever read them: the service that owns them is down or stuck."
+
+      - alert: RabbitMQQueueFamilyBacklog
+        expr: sum by (cluster, server_name, family) (rabbitmq_queue_family_messages_ready{job="callstats"}) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ backlog in {{ $labels.family }} on {{ $labels.cluster }}"
+          description: "{{ $value | printf \"%.0f\" }} messages have been waiting in {{ $labels.family }} for 5 minutes (normal is 0). Its consumers are not keeping up."

@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["callstats-exporter:9480"],
+    "labels": {
+      "environment": "test",
+      "cluster": "meydan",
+      "site": "meydan",
+      "server_name": "my01"
+    }
+  }
+]
