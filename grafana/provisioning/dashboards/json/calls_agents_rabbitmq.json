@@ -861,7 +861,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum(increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"}[15m]))",
+          "expr": "clamp_min(sum(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"}) - (sum(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"} offset 15m) or vector(0)), 0)",
           "refId": "A",
           "instant": true,
           "range": false
@@ -923,7 +923,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered\"}) * 0), 0)",
           "refId": "A",
           "legendFormat": "Answered"
         },
@@ -932,7 +932,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"cancelled\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"cancelled\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"cancelled\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"cancelled\"}) * 0), 0)",
           "refId": "B",
           "legendFormat": "Cancelled"
         },
@@ -941,7 +941,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"no_answer\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"no_answer\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"no_answer\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"no_answer\"}) * 0), 0)",
           "refId": "C",
           "legendFormat": "No answer"
         },
@@ -950,7 +950,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"unanswered\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"unanswered\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"unanswered\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"unanswered\"}) * 0), 0)",
           "refId": "D",
           "legendFormat": "Ended before answer"
         },
@@ -959,7 +959,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"busy\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"busy\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"busy\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"busy\"}) * 0), 0)",
           "refId": "E",
           "legendFormat": "Busy"
         },
@@ -968,7 +968,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"rejected\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"rejected\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"rejected\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"rejected\"}) * 0), 0)",
           "refId": "F",
           "legendFormat": "Rejected"
         },
@@ -977,7 +977,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"dropped\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"dropped\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"dropped\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"dropped\"}) * 0), 0)",
           "refId": "G",
           "legendFormat": "Dropped"
         },
@@ -986,7 +986,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"failed\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"failed\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"failed\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"failed\"}) * 0), 0)",
           "refId": "H",
           "legendFormat": "Failed"
         },
@@ -995,7 +995,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "sum by (status) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered_elsewhere\"}[15m]))",
+          "expr": "clamp_min(sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered_elsewhere\"}) - (sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered_elsewhere\"} offset 15m) or sum by (status) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\",status=\"answered_elsewhere\"}) * 0), 0)",
           "refId": "I",
           "legendFormat": "Answered elsewhere"
         }
@@ -2387,7 +2387,7 @@
             "type": "prometheus",
             "uid": "${ds}"
           },
-          "expr": "topk(10, sum by (user) (increase(kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"}[15m])))",
+          "expr": "topk(10, clamp_min(sum by (user) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"}) - (sum by (user) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"} offset 15m) or sum by (user) (kazoo_user_calls_total{cluster=\"$cluster\",account=~\"$account\",call_type=~\"$call_type\",user=~\"$agent\"}) * 0), 0))",
           "refId": "A",
           "legendFormat": "{{user}}"
         }
