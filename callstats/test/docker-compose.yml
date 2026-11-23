@@ -1,0 +1,56 @@
+# Local test (WSL) for callstats: fake CouchDB + RabbitMQ + seeder + the exporter, on the
+# local monitoring stack's network so the local Prometheus/Grafana see it.
+#   cd callstats/test && docker compose up -d --build
+#   cd ../.. && docker compose -f docker-compose.yml -f callstats/test/prometheus.override.yml up -d prometheus
+# Tear down: docker compose down -v   (in callstats/test)
+name: callstats-test
+
+networks:
+  monitoring:
+    external: true
+    name: monitoring_monitoring
+
+services:
+  callstats-couchdb:
+    image: couchdb:3.4
+    container_name: callstats-couchdb
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: admin
+    ports:
+      - "127.0.0.1:15984:5984"
+    networks: [monitoring]
+
+  callstats-rabbitmq:
+    image: rabbitmq:4.1-management
+    container_name: callstats-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "127.0.0.1:15672:15672"
+    networks: [monitoring]
+
+  callstats-seeder:
+    image: python:3.12-alpine
+    container_name: callstats-seeder
+    command: ["python3", "-u", "/test/seed.py"]
+    volumes:
+      - ./:/test:ro
+    depends_on: [callstats-couchdb, callstats-rabbitmq]
+    networks: [monitoring]
+
+  callstats-exporter:
+    build: ..
+    image: callstats:local
+    container_name: callstats-exporter
+    environment:
+      COUCH_URL: http://admin:admin@callstats-couchdb:5984
+      RABBIT_URL: http://callstats-rabbitmq:15692
+      LISTEN: 0.0.0.0:9480
+      POLL_SECONDS: "15"
+      TZ_OFFSET: "+04:00"
+    ports:
+      - "127.0.0.1:9480:9480"
+    depends_on: [callstats-seeder]
+    networks: [monitoring]

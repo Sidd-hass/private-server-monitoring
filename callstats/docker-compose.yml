@@ -1,0 +1,24 @@
+# Call statistics + RabbitMQ queue exporter for one Kazoo node (Meydan: my01).
+# Copy this folder to the node (e.g. /opt/callstats), create .env from .env.example
+# and run: docker compose up -d --build
+services:
+  callstats:
+    build: .
+    image: callstats:local
+    container_name: callstats
+    restart: unless-stopped
+    # Host network: CouchDB (5984) and rabbitmq_prometheus (15692) are read on 127.0.0.1, and
+    # Prometheus on 244 scrapes :9480 over the VPN like node_exporter.
+    network_mode: host
+    # 24 h of CDR rows in RAM is ~20-40 MB at Meydan's volume.
+    mem_limit: ${MEM_LIMIT:-256m}
+    memswap_limit: ${MEM_LIMIT:-256m}
+    cpus: 0.5
+    read_only: true
+    env_file:
+      - .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
