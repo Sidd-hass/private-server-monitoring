@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["172.16.200.102:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "spc",
+      "site": "spc",
+      "server_name": "spc-sj01"
+    }
+  }
+]

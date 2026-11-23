@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["172.16.125.40:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "shams",
+      "site": "shams",
+      "server_name": "shams-uc01"
+    }
+  }
+]
