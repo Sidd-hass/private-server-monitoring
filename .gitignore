@@ -5,3 +5,6 @@ Thumbs.db
 *.env
 alertmanager/secrets/
 test-logs/
+dubai_south.txt
+shams.txt
+spc.txt
