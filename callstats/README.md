@@ -16,7 +16,7 @@ docker compose -f docker-compose.yml -f callstats/test/prometheus.override.yml u
 
 The seeder creates two fake accounts, agents, a day of CDR legs, and queues. It continues adding calls and queue traffic. The RabbitMQ test backlog is deliberately temporary (it grows and is purged on a cycle).
 
-Check the exporter at `http://127.0.0.1:9480/metrics`, Prometheus at `http://127.0.0.1:9090/targets`, and Grafana at `http://127.0.0.1:3000`. In Grafana, open **OCube → Calls & Agents (live 24 h) · RabbitMQ**. The dashboard refreshes every 30 seconds. Prometheus queries to check:
+Check the exporter at `http://127.0.0.1:9480/metrics`, Prometheus at `http://127.0.0.1:9090/targets`, and Grafana at `http://127.0.0.1:3000`. In Grafana, open **Observability → Calls & Agents (live 24 h) · RabbitMQ**. The dashboard refreshes every 30 seconds. Prometheus queries to check:
 
 ```promql
 sum by (status) (kazoo_user_calls_window{window="24h"})
@@ -51,7 +51,7 @@ Nothing in this section has been applied to Meydan. Deploy only after reviewing 
 
    Persist the equivalent rule in `/etc/iptables/rules.v4` according to the node's existing firewall convention.
 4. Commit and deploy the repository changes to the Prometheus/Grafana host (244), then reload Prometheus with `curl -X POST http://localhost:9090/-/reload`. Grafana provisions the dashboard from `grafana/provisioning/dashboards/ocube/`.
-5. Verify target `callstats` is up and open **OCube → Calls & Agents (live 24 h) · RabbitMQ**. Confirm CouchDB poll freshness and RabbitMQ metrics before relying on alerts.
+5. Verify target `callstats` is up and open **Observability → Calls & Agents (live 24 h) · RabbitMQ**. Confirm CouchDB poll freshness and RabbitMQ metrics before relying on alerts.
 
 ## Metric and reporting limits
 

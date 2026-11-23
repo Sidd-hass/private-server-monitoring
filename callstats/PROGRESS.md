@@ -113,7 +113,7 @@ The raw `hangup_cause` is kept as a label too, so every individual result is vis
 
 ## 4. Dashboard and deployment documentation
 
-1. **Dashboard.** The JSON is now present at `grafana/provisioning/dashboards/ocube/calls_agents_rabbitmq.json`, uid `callstats-agents`,
+1. **Dashboard.** The JSON is now present at `grafana/provisioning/dashboards/json/calls_agents_rabbitmq.json`, uid `callstats-agents`,
    title "Calls & Agents (live 24 h) · RabbitMQ", refresh 30 s, filters Site / Window (24 h or today) / Account / Direction / Agent:
    - Tiles: total, answered, cancelled, no answer, busy/rejected, dropped, failed, answer rate %, talk time, avg talk, active agents, calls in the last 15 min.
    - Calls per 15 min stacked by result, plus a result donut.
