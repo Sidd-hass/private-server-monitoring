@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["151.243.12.57:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpin",
+      "site": "ucpin",
+      "server_name": "ucpin11"
+    }
+  }
+]

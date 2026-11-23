@@ -12,7 +12,7 @@ echo "== docker"; docker --version 2>&1; docker compose version 2>&1 | head -1
 echo "== couchdb ($COUCH)"
 curl -s -m 5 "$COUCH/" || echo "NO ANSWER (CouchDB elsewhere or needs credentials: set COUCH=http://user:pass@host:5984)"
 echo
-for id in $(curl -s -m 10 "$COUCH/accounts/_all_docs" | grep -o '"id":"[0-9a-f]\{32\}"' | cut -d'"' -f4 | head -20); do
+for id in $(curl -s -m 10 "$COUCH/accounts/_all_docs" | grep -o '"id":"[0-9a-f]\{32\}"' | cut -d'"' -f4); do
   a=$(echo "$id" | cut -c1-2); b=$(echo "$id" | cut -c3-4); r=$(echo "$id" | cut -c5-)
   db="account%2F$a%2F$b%2F$r-$month"
   docs=$(curl -s -m 10 "$COUCH/$db" | grep -o '"doc_count":[0-9]*' | cut -d: -f2)

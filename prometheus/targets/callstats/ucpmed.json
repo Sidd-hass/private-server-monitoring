@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["143.14.172.231:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucpmed",
+      "site": "ucpmed",
+      "server_name": "ucpmed01"
+    }
+  }
+]
