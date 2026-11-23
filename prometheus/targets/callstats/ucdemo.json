@@ -1,0 +1,11 @@
+[
+  {
+    "targets": ["181.214.10.237:9480"],
+    "labels": {
+      "environment": "production",
+      "cluster": "ucdemo",
+      "site": "ucdemo",
+      "server_name": "uc11"
+    }
+  }
+]
