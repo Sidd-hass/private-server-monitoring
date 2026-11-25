@@ -99,10 +99,15 @@ docker compose ps
 ### 5. Access Services
 | Service | URL | Credentials |
 | :--- | :--- | :--- |
-| **Grafana** | `http://<SERVER_IP>:3000` | User: `admin` / Password: `admin` (or `.env` value) |
-| **Prometheus** | `http://<SERVER_IP>:9090` | Public / Open |
-| **Alertmanager** | `http://<SERVER_IP>:9093` | Public / Open |
+| **Grafana** | `https://ocubedashboards.voicemeetme.net` | Grafana login (`GF_ADMIN_USER` / `GF_ADMIN_PASSWORD` in `.env`) |
+| **Prometheus** | `https://ocubedashboards.voicemeetme.net/prometheus/` | Basic auth (`/data/prometheus.htpasswd` in nginx-proxy-manager) |
+| **Alertmanager** | `ssh -p 2551 -L 9093:127.0.0.1:9093 root@181.214.10.244`, then `http://localhost:9093` | SSH tunnel only |
 | **Node Exporter** | `http://<SERVER_IP>:9100/metrics` | Raw metrics stream |
+
+Prometheus, Alertmanager, Grafana, blackbox-exporter and the nginx exporter are published on `127.0.0.1` only.
+nginx-proxy-manager reaches Grafana and Prometheus on the `npm` Docker network; its config for the
+`/prometheus/` path is in `nginx-proxy-manager/ocubedashboards-advanced.conf`. Alloy's log receiver (3500)
+stays on all addresses and is limited to `tun0` by the host firewall.
 
 ---
 
