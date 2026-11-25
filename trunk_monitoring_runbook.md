@@ -1,7 +1,7 @@
 # SIP Trunk Monitoring — Per-Node Runbook
 
 How to add a cluster's trunk container (`fonouc_freeswitch_trunk`) to the central monitoring
-(Prometheus `181.214.10.244:9090` → Grafana **OCube → Public & Private Infrastructure Availability → SIP Trunks**).
+(Prometheus `ocubedashboards.voicemeetme.net/prometheus/` → Grafana **OCube → Public & Private Infrastructure Availability → SIP Trunks**).
 
 Do this once on every node that runs the trunk container. It takes about 10 minutes per node.
 
@@ -225,7 +225,7 @@ Use `NODE_IP`, not `localhost` — node_exporter only listens on the private IP.
 
 ### Step 9 — Verify on the central Prometheus
 
-Open `http://181.214.10.244:9090` and run (replace the server name):
+Open `https://ocubedashboards.voicemeetme.net/prometheus/` (basic auth) and run (replace the server name):
 
 ```promql
 freeswitch_gateway_up{server_name="shams-uc01"}

@@ -69,8 +69,11 @@ scrape_configs:
   # Existing custom Nginx Python exporters
   - job_name: 'custom_python_exporter'
     static_configs:
-      - targets: ['181.214.10.244:8000']
+      # 244's exporter is published on loopback only, so scrape it on the Docker network and
+      # keep the old instance label for the dashboards and alerts.
+      - targets: ['custom-nginx-python-exporter:8000']
         labels:
+          instance: '181.214.10.244:8000'
           environment: 'production'
           cluster: 'multicomm'
           server_name: '181.214.10.244'
@@ -820,7 +823,7 @@ scrape_configs:
     static_configs:
       - targets:
           - '181.214.10.244:9100'
-          - '181.214.10.244:8000'
+          - 'custom-nginx-python-exporter:8000'
         labels:
           cluster: 'multicomm'
           server_name: '181.214.10.244'
@@ -841,6 +844,11 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+      # 244's nginx exporter is probed on the Docker network (loopback-only port); keep its old instance.
+      - source_labels: [instance]
+        regex: 'custom-nginx-python-exporter:8000'
+        target_label: instance
+        replacement: '181.214.10.244:8000'
 
   # ============================================================
   # SSL CERTIFICATE EXPIRY for the cluster application URLs
@@ -888,7 +896,7 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-          - 'http://181.214.10.244:8000/metrics'
+          - 'http://custom-nginx-python-exporter:8000/metrics'
       - targets:
           - 'http://181.214.10.246:8000/metrics'
     relabel_configs:
@@ -898,6 +906,11 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+      # 244's nginx exporter is probed on the Docker network (loopback-only port); keep its old instance.
+      - source_labels: [instance]
+        regex: 'http://custom-nginx-python-exporter:8000/metrics'
+        target_label: instance
+        replacement: 'http://181.214.10.244:8000/metrics'
 
   # VoIP agent on trunk nodes (voip/agent): calls, SIP codes, RTP quality, RAM ring buffer.
   # Reached over the VPN like node_exporter. Add a target per trunk node.
