@@ -1,0 +1,33 @@
+<!--
+  VoIP decoders (Kazoo nodes). Mounted to /var/ossec/etc/decoders/local_decoder.xml.
+
+  Kamailio secban (/var/log/kamailio/kamailio-secban.log, kamailio.log):
+    2026-11-26T05:16:44.708103+00:00 ucpin12 kamailio[410907]: WARNING: <script>: SECBAN_WOULD ip=77.239.124.139
+      rule=S5 mode=enforce method=REGISTER ruri=sip:402@151.243.12.59:5060 from=sip:402@151.243.12.59 ua=Yealink ... count=1 node=ucpin12
+    SECBAN = banned (enforce), SECBAN_WOULD = would ban (grace/monitor, or first strike).
+
+  fonouc-secban firewall bans (syslog / journald):
+    2026-11-25T15:51:25.854674+00:00 ucpin12 fonouc-secban: SECBAN_FW ban ip=108.181.132.206 jail=fonouc-sip bantime=3600
+-->
+
+<decoder name="kamailio-secban">
+  <program_name>^kamailio</program_name>
+  <prematch>SECBAN\S* ip=</prematch>
+</decoder>
+
+<decoder name="kamailio-secban-fields">
+  <parent>kamailio-secban</parent>
+  <regex>(SECBAN\S*) ip=(\S+) rule=(\S+) mode=(\S+) method=(\S+) ruri=(\S+) from=(\S+) </regex>
+  <order>secban_action, srcip, secban_rule, secban_mode, sip_method, sip_ruri, sip_from</order>
+</decoder>
+
+<decoder name="fonouc-secban">
+  <program_name>^fonouc-secban</program_name>
+  <prematch>SECBAN_FW </prematch>
+</decoder>
+
+<decoder name="fonouc-secban-fields">
+  <parent>fonouc-secban</parent>
+  <regex>SECBAN_FW (\S+) ip=(\S+) jail=(\S+) bantime=(\d+)</regex>
+  <order>secban_action, srcip, f2b_jail, bantime</order>
+</decoder>

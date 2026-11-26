@@ -1,0 +1,5 @@
+# Generated per installation, never committed
+config/wazuh_indexer_ssl_certs/
+config/authd.pass
+.env
+test-flock.env

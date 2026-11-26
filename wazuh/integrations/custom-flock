@@ -1,0 +1,4 @@
+#!/bin/sh
+# wazuh-integratord entry point; runs custom-flock.py with Wazuh's bundled Python.
+WPYTHON=/var/ossec/framework/python/bin/python3
+exec "$WPYTHON" "$(dirname "$0")/custom-flock.py" "$@"

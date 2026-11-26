@@ -1,0 +1,110 @@
+<!--
+  Local rules for the VoIP fleet. Mounted to /var/ossec/etc/rules/local_rules.xml.
+  IDs 100100-100199. Levels: 5 info, 8-10 needs a look, 12+ act now (12 = Flock later).
+-->
+
+<!-- ===================================================== SIP: Kamailio secban / fail2ban -->
+<group name="sip,secban,">
+
+  <rule id="100100" level="0">
+    <decoded_as>kamailio-secban</decoded_as>
+    <description>Kamailio secban event</description>
+  </rule>
+
+  <rule id="100101" level="5">
+    <if_sid>100100</if_sid>
+    <field name="secban_action">^SECBAN_WOULD$</field>
+    <description>SIP: suspicious source $(srcip) ($(sip_method), rule $(secban_rule), $(secban_mode))</description>
+    <group>sip_scan,</group>
+  </rule>
+
+  <rule id="100102" level="8">
+    <if_sid>100100</if_sid>
+    <field name="secban_action">^SECBAN$</field>
+    <description>SIP: Kamailio banned $(srcip) (rule $(secban_rule), $(sip_method) $(sip_ruri))</description>
+    <group>sip_ban,</group>
+  </rule>
+
+  <rule id="100103" level="10" frequency="20" timeframe="120">
+    <if_matched_sid>100101</if_matched_sid>
+    <description>SIP: scanning wave, 20+ suspicious SIP requests in 2 minutes</description>
+    <group>sip_scan,attack,</group>
+  </rule>
+
+  <rule id="100105" level="0">
+    <decoded_as>fonouc-secban</decoded_as>
+    <description>fonouc-secban firewall event</description>
+  </rule>
+
+  <rule id="100106" level="8">
+    <if_sid>100105</if_sid>
+    <field name="secban_action">^ban$</field>
+    <description>SIP: $(srcip) banned in fail2ban jail $(f2b_jail) for $(bantime)s</description>
+    <group>sip_ban,firewall_drop,</group>
+  </rule>
+
+  <rule id="100107" level="10">
+    <if_sid>100106</if_sid>
+    <field name="f2b_jail">recidive|-r$</field>
+    <description>SIP: repeat offender $(srcip) banned for $(bantime)s (jail $(f2b_jail))</description>
+    <group>sip_ban,firewall_drop,</group>
+  </rule>
+
+  <!-- A carrier or one of our own nodes must never be banned: "blocked at our end". -->
+  <rule id="100110" level="14">
+    <if_sid>100102,100106</if_sid>
+    <list field="srcip" lookup="address_match_key">etc/lists/sip-carriers</list>
+    <description>CARRIER/OWN IP BANNED: $(srcip) is a trunk or node address and was just banned. Calls will fail</description>
+    <group>sip_ban,carrier_blocked,</group>
+  </rule>
+
+  <rule id="100111" level="12">
+    <if_sid>100101</if_sid>
+    <list field="srcip" lookup="address_match_key">etc/lists/sip-carriers</list>
+    <description>Carrier/own IP $(srcip) flagged by Kamailio secban ($(secban_rule)). A ban may follow</description>
+    <group>sip_scan,carrier_blocked,</group>
+  </rule>
+</group>
+
+<!-- ===================================================== Access -->
+<group name="access,">
+  <rule id="100120" level="10">
+    <if_sid>5715</if_sid>
+    <user>^root$</user>
+    <description>Root logged in over SSH from $(srcip)</description>
+    <group>authentication_success,root_login,</group>
+  </rule>
+</group>
+
+<!-- ===================================================== File integrity: sensitive files -->
+<group name="syscheck,sensitive_change,">
+  <rule id="100130" level="12">
+    <if_sid>550,553,554</if_sid>
+    <field name="file">authorized_keys|/etc/passwd$|/etc/shadow$|/etc/sudoers</field>
+    <description>Access control file changed: $(file)</description>
+  </rule>
+
+  <rule id="100131" level="12">
+    <if_sid>550,553,554</if_sid>
+    <field name="file">/etc/network/interfaces|/etc/iptables/|/etc/fail2ban/|/etc/ssh/sshd_config</field>
+    <description>Network / firewall / SSH config changed: $(file)</description>
+  </rule>
+
+  <rule id="100132" level="10">
+    <if_sid>550,553,554</if_sid>
+    <field name="file">/etc/kazoo/|/etc/kamailio/</field>
+    <description>Kazoo/Kamailio config changed: $(file)</description>
+  </rule>
+
+  <rule id="100133" level="10">
+    <if_sid>550,553,554</if_sid>
+    <field name="file">/etc/cron|/var/spool/cron/</field>
+    <description>Cron job changed: $(file)</description>
+  </rule>
+
+  <rule id="100134" level="10">
+    <if_sid>550,553,554</if_sid>
+    <field name="file">/usr/local/sbin/|/usr/local/bin/</field>
+    <description>Local admin script/binary changed: $(file)</description>
+  </rule>
+</group>
