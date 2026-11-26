@@ -663,6 +663,116 @@ groups:
           description: "Traffic is high enough that the {{ $labels.server_name }} RAM buffer only holds {{ $value | humanizeDuration }} of calls. Raise RING_MB (and MEM_LIMIT) in the agent .env if longer replay is needed."
 
   # ---------------------------------------------------------------------------
+  # IP-authenticated carrier trunks (Tata on UCPIN / UCDEMO / UCPMED), from
+  # scripts/sip_peer_metrics.py via each node's node_exporter textfile collector.
+  # sip_peer_blocked{blocked_by="local"|"remote", reason} says WHO is blocking:
+  #   local  = our end (fail2ban, ipset/iptables DROP, Kamailio ipban, interface down,
+  #            SIP listener missing)
+  #   remote = carrier end (no OPTIONS reply although it answered before, 401/403/407
+  #            to OPTIONS, 3+ CALL_REJECTED call legs in 5 minutes)
+  # Dashboard: Observability -> SIP Carrier Trunks.
+  # ---------------------------------------------------------------------------
+  - name: sip_carrier_peer_alerts
+    rules:
+      - alert: SipCarrierBlockedOurEnd
+        expr: sip_peer_blocked{blocked_by="local"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.carrier }} trunk BLOCKED AT OUR END on {{ $labels.server_name }}: {{ $labels.reason }}"
+          description: "Our side is blocking carrier {{ $labels.carrier }} ({{ $labels.peer }}) on {{ $labels.server_name }} ({{ $labels.cluster }}). Reason: {{ $labels.reason }} (fail2ban:<jail> = banned by fail2ban, ipset:<set> / iptables:<chain> = firewall drop, kamailio:ipban = secban ban, iface_down:<if> = interface to the carrier down, listener_missing:<proc>:<port> = Kamailio/FreeSWITCH not listening). Calls to and from this carrier fail on this node."
+
+      - alert: SipCarrierBlockedCarrierEnd
+        expr: sip_peer_blocked{blocked_by="remote"} == 1
+        for: 3m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.carrier }} trunk BLOCKED AT CARRIER END on {{ $labels.server_name }}: {{ $labels.reason }}"
+          description: "Nothing on our side blocks {{ $labels.carrier }} ({{ $labels.peer }}), but the carrier is not accepting {{ $labels.server_name }} ({{ $labels.cluster }}). Reason: {{ $labels.reason }} (options_timeout = no reply to SIP OPTIONS, icmp_unreachable = port closed, options_401/403/407 = OPTIONS rejected, auth_failures = carrier rejected 3+ calls with 401/403/407 in 5 minutes). Raise it with {{ $labels.carrier }} with this node's source IP from the dashboard."
+
+      - alert: SipCarrierAuthFailures
+        expr: increase(sip_peer_auth_failures_total[10m]) >= 1 unless on(instance, carrier) (sip_peer_blocked{blocked_by="remote"} == 1)
+        for: 0m
+        labels:
+          severity: warning
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.carrier }} rejected calls ({{ $labels.reason }}) on {{ $labels.server_name }}"
+          description: "{{ $value | printf \"%.0f\" }} call legs to {{ $labels.carrier }} ({{ $labels.peer }}) were rejected with an authentication/authorisation failure ({{ $labels.reason }}) in the last 10 minutes on {{ $labels.server_name }}. See the trunk log panel."
+
+      - alert: SipCarrierCallsBarredHigh
+        expr: |
+          (
+            sum by (cluster, server_name, instance, carrier, peer) (increase(sip_peer_hangups_total{cause=~".*_BARRED"}[15m]))
+            / sum by (cluster, server_name, instance, carrier, peer) (increase(sip_peer_hangups_total[15m]))
+          ) > 0.5
+          and on(instance, carrier) sum by (instance, carrier) (increase(sip_peer_hangups_total[15m])) >= 20
+        for: 15m
+        labels:
+          severity: warning
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.carrier }} is barring {{ $value | humanizePercentage }} of calls on {{ $labels.server_name }}"
+          description: "More than half of the call legs to {{ $labels.carrier }} ({{ $labels.peer }}) ended with OUTGOING/INCOMING_CALL_BARRED for 15 minutes. The carrier is refusing the calls (barring, DND/NCPR or channel limit at their end)."
+
+      - alert: SipCarrierInterfaceDown
+        expr: sip_peer_iface_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "Interface {{ $labels.iface }} to {{ $labels.carrier }} is DOWN on {{ $labels.server_name }}"
+          description: "The interface that routes to {{ $labels.carrier }} ({{ $labels.peer }}) on {{ $labels.server_name }} is down or has no carrier (iface=none: no route). Our end."
+
+      - alert: SipListenerMissing
+        expr: sip_listener_expected_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.process }} not listening on {{ $labels.proto }}/{{ $labels.port }} on {{ $labels.server_name }}"
+          description: "{{ $labels.process }} has no {{ $labels.proto }} socket on port {{ $labels.port }} on {{ $labels.server_name }} ({{ $labels.cluster }}). Carrier traffic on that port is not answered."
+
+      - alert: SipNodeInterfaceDown
+        # Every real interface (eth1 = cluster network on UCPIN: Galera, RabbitMQ, CouchDB).
+        expr: sip_iface_up == 0 and on(instance, iface) (max_over_time(sip_iface_up[1d]) == 1)
+        for: 2m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "Interface {{ $labels.iface }} DOWN on {{ $labels.server_name }}"
+          description: "{{ $labels.iface }} ({{ $labels.address }}) on {{ $labels.server_name }} ({{ $labels.cluster }}) was up in the last day and is now {{ $labels.operstate }}."
+
+      - alert: SipCarrierNotWhitelisted
+        # The fonouc-sip jails and Kamailio trunk_ip should always hold the carrier
+        # (fonouc-secban-trunk-sync keeps them in step with the Kazoo ACL).
+        expr: sip_peer_whitelisted{list=~"fail2ban:fonouc-sip.*|kamailio:trunk_ip"} == 0
+        for: 15m
+        labels:
+          severity: warning
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.carrier }} not whitelisted in {{ $labels.list }} on {{ $labels.server_name }}"
+          description: "{{ $labels.carrier }} ({{ $labels.peer }}) is missing from {{ $labels.list }} on {{ $labels.server_name }}. It is not blocked now, but fail2ban/secban could ban it. Check the Kazoo ACL and fonouc-secban-trunk-sync."
+
+      - alert: SipCarrierMetricsStale
+        expr: time() - node_textfile_mtime_seconds{file=~".*sip_peer.prom"} > 300
+        for: 2m
+        labels:
+          severity: warning
+          alert_type: trunk
+        annotations:
+          summary: "Carrier trunk metrics stale on {{ $labels.server_name }}"
+          description: "sip_peer.prom on {{ $labels.server_name }} has not been updated for {{ $value | humanizeDuration }}. Check the sip_peer_metrics cron job (journalctl -u cron)."
+
+  # ---------------------------------------------------------------------------
   # callstats/ exporter: per-user call statistics and RabbitMQ queue families
   # (job "callstats", Meydan my01). RabbitMQ totals from the same job also feed
   # the rabbitmq_alerts group above.

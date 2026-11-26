@@ -53,7 +53,7 @@ fonouc_freeswitch_trunk ──fs_cli (ESL 8023)──► /usr/local/sbin/fs_trun
 | SHAMS | uc01 | 172.16.125.40 | `du_ae_trunk` (065794300, profile `from_du`) | ✅ Done 2026-10-13 |
 | Dubai South | ds02 | 192.168.160.7 | `du_ae_trunk` (044967600) | ✅ Done 2026-10-13 |
 | Dubai South | ds01 | 192.168.160.6 | none — container running, 0 gateways (standby) | ⏳ Pending (install for failover visibility) |
-| UCPIN / UCDEMO / UCPMED | — | — | no trunk container (carrier connects by IP) | ➖ Needs a different check |
+| UCPIN / UCDEMO / UCPMED | — | — | no trunk container (carrier connects by IP) | ➖ Covered by `scripts/sip_peer_metrics.py`, see `sip_carrier_trunk_runbook.md` |
 | Tahseel / Cogent | — | — | not checked (VPN unreachable) | ❓ |
 
 Update this table as each node is finished.
