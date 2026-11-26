@@ -95,11 +95,62 @@ The first run starts reading `kazoo-debug.log` at its end, so call-leg counters 
 
 ### Logs in the dashboard (Loki)
 
-The log panels need the Alloy shipper (`alloy/kazoo-node`) on the node. It is not running on
-UCPIN/UCDEMO/UCPMED yet. Deploy it as the header of `alloy/kazoo-node/docker-compose.yml` says
-(copy the folder, `.env` from `.env.example`, `docker compose up -d`). The `sip_trunk` pipeline
-in `config.alloy` tails `/var/log/sip_peer_metrics.log` (the script rotates it at 20 MB).
-Without Alloy, metrics and alerts still work and only the log panels stay empty.
+The log panels need the Alloy shipper (`alloy/kazoo-node`, container `kazoo-log-shipper`) on
+each node. Its `sip_trunk` pipeline tails `/var/log/sip_peer_metrics.log` (the script rotates
+it at 20 MB). The same shipper also sends the Kazoo/CouchDB/FreeSWITCH/RabbitMQ error lines
+(already filtered and rate-capped). Without it, metrics and alerts still work and only the log
+panels stay empty.
+
+These sites have no VPN to 244, so the shipper pushes over HTTPS:
+
+```
+kazoo-log-shipper (node) ──HTTPS + basic auth──► nginx-proxy-manager /loki-push/  (node IP allowlist)
+                                                  └─► alloy:3501 (244, npm network, not published)
+                                                        keeps job="kazoo-node", cluster ucpin|ucdemo|ucpmed
+                                                        └─► loki:3100
+```
+
+**On 244, once:**
+
+```bash
+cd /opt/private-server-monitoring && git pull
+# password for the node shippers (keep it for the node .env files)
+htpasswd -c -B /opt/docker/nginx-proxy-manager/data/loki-push.htpasswd kazoo-logs
+chmod 644 /opt/docker/nginx-proxy-manager/data/loki-push.htpasswd
+docker compose up -d alloy            # joins the npm network, receiver on 3501
+```
+
+nginx-proxy-manager → Proxy Hosts → ocubedashboards.voicemeetme.net → Edit → Advanced: paste the
+whole updated `nginx-proxy-manager/ocubedashboards-advanced.conf` (it now has the `/loki-push/`
+location) → Save.
+
+Check from a UCPIN node (expect 401 without the password, 200 with it):
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://ocubedashboards.voicemeetme.net/loki-push/ready
+curl -s -o /dev/null -w "%{http_code}\n" -u kazoo-logs:'<password>' https://ocubedashboards.voicemeetme.net/loki-push/ready
+```
+
+From any IP not in the allowlist it is 403.
+
+**On each node** (copy `alloy/kazoo-node/` to `/opt/server-monitoring/alloy` first):
+
+```bash
+cd /opt/server-monitoring/alloy
+cat > .env <<'EOF'
+LOKI_URL=https://ocubedashboards.voicemeetme.net/loki-push/loki/api/v1/push
+LOKI_USER=kazoo-logs
+LOKI_PASSWORD=<the htpasswd password>
+SERVER_NAME=ucpin11
+CLUSTER=ucpin
+EOF
+chmod 600 .env
+docker compose up -d
+docker logs --tail 20 kazoo-log-shipper     # no "401"/"403"/"connection refused"
+```
+
+`SERVER_NAME` must be the node's name (ucpin11/12/13, uc11/12, ucpmed01/02) so the log panels
+match the `server` variable. The container is capped at 256 MB RAM and 0.5 CPU.
 
 ### Monitoring server (244)
 

@@ -20,6 +20,8 @@ services:
       LOKI_URL: ${LOKI_URL:?Set LOKI_URL in .env}
       SERVER_NAME: ${SERVER_NAME:?Set SERVER_NAME in .env}
       CLUSTER: ${CLUSTER:?Set CLUSTER in .env}
+      LOKI_USER: ${LOKI_USER:-}
+      LOKI_PASSWORD: ${LOKI_PASSWORD:-}
     volumes:
       - ./config.alloy:/etc/alloy/config.alloy:ro
       - /var/log:/var/log:ro

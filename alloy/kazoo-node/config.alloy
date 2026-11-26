@@ -4,11 +4,17 @@
 // almost all of it info/debug. Every pipeline is also rate-capped so a log storm cannot
 // flood Loki. Labels: job="kazoo-node", server_name, cluster, service, level.
 //
-// Env (see docker-compose.yml): LOKI_URL, SERVER_NAME, CLUSTER.
+// Env (see docker-compose.yml): LOKI_URL, SERVER_NAME, CLUSTER, and LOKI_USER/LOKI_PASSWORD
+// for sites without VPN that push through https://<grafana host>/loki-push/ (empty = no auth;
+// Loki itself ignores the header).
 
 loki.write "central" {
   endpoint {
     url = sys.env("LOKI_URL")
+    basic_auth {
+      username = sys.env("LOKI_USER")
+      password = sys.env("LOKI_PASSWORD")
+    }
   }
   external_labels = {
     job         = "kazoo-node",
