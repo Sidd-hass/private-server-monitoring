@@ -198,6 +198,8 @@ services:
       - ${PM2_LOG_DIR:-/root/.pm2/logs}:/pm2logs:ro
     networks:
       - monitoring
+      # nginx-proxy-manager forwards /loki-push/ to alloy:3501 (Kazoo nodes without VPN).
+      - npm
     depends_on:
       - loki
 

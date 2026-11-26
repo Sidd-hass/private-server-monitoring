@@ -197,3 +197,33 @@ loki.source.api "voip" {
   relabel_rules = loki.relabel.voip.rules
   forward_to    = [loki.write.local.receiver]
 }
+
+// ---------------------------------------------------------------- Kazoo nodes without VPN
+// UCPIN / UCDEMO / UCPMED have no VPN to 244, so their kazoo-log-shipper (alloy/kazoo-node)
+// pushes over HTTPS: nginx-proxy-manager location /loki-push/ (basic auth + source IP
+// allowlist, nginx-proxy-manager/ocubedashboards-advanced.conf) -> alloy:3501 on the npm
+// network. Port 3501 is not published. Only job="kazoo-node" streams of these three
+// clusters are kept, so the endpoint cannot write any other stream into Loki.
+loki.relabel "kazoo_nodes" {
+  forward_to = []
+
+  rule {
+    source_labels = ["job"]
+    regex         = "kazoo-node"
+    action        = "keep"
+  }
+  rule {
+    source_labels = ["cluster"]
+    regex         = "ucpin|ucdemo|ucpmed"
+    action        = "keep"
+  }
+}
+
+loki.source.api "kazoo_nodes" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port    = 3501
+  }
+  relabel_rules = loki.relabel.kazoo_nodes.rules
+  forward_to    = [loki.write.local.receiver]
+}
