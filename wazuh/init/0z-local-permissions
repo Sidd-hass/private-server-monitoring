@@ -1,0 +1,19 @@
+#!/usr/bin/with-contenv bash
+# Runs after 0-wazuh-init (which copies /wazuh-config-mount as root) and before the manager
+# starts. Gives our mounted files the ownership Wazuh expects:
+#   - shared group folders: wazuh-remoted (user wazuh) writes merged.mg there
+#   - authd.pass: readable by wazuh-authd only
+for d in /var/ossec/etc/shared/*/; do
+  chown -R wazuh:wazuh "$d"
+  chmod 770 "$d"
+  find "$d" -type f -exec chmod 660 {} +
+done
+chown wazuh:wazuh /var/ossec/etc/rules/local_rules.xml /var/ossec/etc/decoders/local_decoder.xml /var/ossec/etc/lists/sip-carriers
+chmod 660 /var/ossec/etc/rules/local_rules.xml /var/ossec/etc/decoders/local_decoder.xml /var/ossec/etc/lists/sip-carriers
+if [ -f /var/ossec/etc/authd.pass ]; then
+  chown root:wazuh /var/ossec/etc/authd.pass
+  chmod 640 /var/ossec/etc/authd.pass
+fi
+for f in /var/ossec/integrations/custom-flock /var/ossec/integrations/custom-flock.py; do
+  [ -f "$f" ] && chown root:wazuh "$f" && chmod 750 "$f"
+done
