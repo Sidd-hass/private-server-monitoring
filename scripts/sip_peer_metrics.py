@@ -33,7 +33,11 @@ import sys
 import time
 import uuid
 
-CONF = os.environ.get("SIP_PEERS_CONF", "/etc/sip_peer_metrics.conf")
+# cron runs with PATH=/usr/bin:/bin; kamcmd, ipset and iptables-save are in /usr/sbin, and a
+# missing tool would silently hide that kind of block. Appended, so a PATH given to us wins.
+os.environ["PATH"] = os.environ.get("PATH", "") + ":/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+CONF =os.environ.get("SIP_PEERS_CONF", "/etc/sip_peer_metrics.conf")
 # node_exporter --collector.textfile.directory: /opt/node-exporter/textfile on UCPIN/UCDEMO,
 # /var/lib/node_exporter/textfile on UCPMED. First existing one wins unless OUT_DIR is set.
 OUT_DIRS = [os.environ["OUT_DIR"]] if os.environ.get("OUT_DIR") else [
@@ -48,7 +52,8 @@ AUTH_WINDOW = 300                       # seconds of auth failures that count as
 AUTH_MIN = int(os.environ.get("AUTH_MIN", "3"))
 PROBE_TIMEOUT = 2.0
 PROBE_TRIES = 2
-PROBE_MEMORY = 7 * 86400                # an OPTIONS timeout counts once the peer answered this recently
+STATE_EVENT_EVERY = 3600               # block_state event at least this often (also on change)
+PROBE_MEMORY = 7 * 86400               # an OPTIONS timeout counts once the peer answered this recently
 
 AUTH_CODES = {"401", "403", "407"}
 AUTH_CAUSES = {"CALL_REJECTED"}          # also 603 Decline; the event line shows the real code
@@ -447,6 +452,10 @@ def gen(dry):
             if in_net(ip, cidr):
                 local.append("iptables:%s:%s" % (chain, tgt))
         for jail, j in sorted(f2b.items()):
+            if "ssh" in jail:        # SSH jails never see SIP traffic; their whitelist is irrelevant
+                if ip in j["banned"]:
+                    local.append("fail2ban:%s" % jail)
+                continue
             banned = 1 if ip in j["banned"] else 0
             ign = 1 if any(in_net(ip, x) for x in j["ignore"]) else 0
             put("sip_peer_fail2ban_banned", labels(carrier=car, peer=peer, jail=jail), banned)
@@ -499,7 +508,10 @@ def gen(dry):
                 0 if blocked_by == "none" else 1)
         blocks_now[car] = {"by": blocked_by, "reasons": reasons}
         old = prev_blocks.get(car)
-        if old != blocks_now[car]:
+        # On every change, and hourly so the dashboard's event panel always shows the state.
+        last_ev = st.setdefault("state_event_at", {})
+        if old != blocks_now[car] or time.time() - last_ev.get(car, 0) >= STATE_EVENT_EVERY:
+            last_ev[car] = time.time()
             events.append("level=%s event=block_state carrier=%s peer=%s blocked_by=%s reason=%s iface=%s src=%s" % (
                 "info" if blocked_by == "none" else "error", car, peer, blocked_by, ",".join(reasons),
                 dev or "none", src or "none"))

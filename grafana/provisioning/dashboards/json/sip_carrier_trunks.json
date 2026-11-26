@@ -200,7 +200,7 @@
         },
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "auto",
         "orientation": "auto"
       }
@@ -263,7 +263,7 @@
         },
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "auto",
         "orientation": "auto"
       }
@@ -326,7 +326,7 @@
         },
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "auto",
         "orientation": "auto"
       }
@@ -393,7 +393,7 @@
         },
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "auto",
         "orientation": "auto"
       }
@@ -895,7 +895,8 @@
             "cellOptions": {
               "type": "auto"
             }
-          }
+          },
+          "noValue": "Nothing blocked: no fail2ban, firewall, secban, interface or listener block, and the carrier answers"
         },
         "overrides": [
           {
@@ -1492,7 +1493,8 @@
             "cellOptions": {
               "type": "auto"
             }
-          }
+          },
+          "noValue": "No ban or drop rule holds the carrier IP"
         },
         "overrides": []
       },
@@ -1700,7 +1702,8 @@
               "mode": "normal",
               "group": "A"
             }
-          }
+          },
+          "noValue": "No authentication failures from the carrier"
         },
         "overrides": []
       },
@@ -1796,7 +1799,7 @@
       "type": "logs",
       "title": "Authentication failures from the carrier end",
       "id": 22,
-      "description": "Call legs the carrier rejected with 401/403/407 / CALL_REJECTED, with the FreeSWITCH log line.",
+      "description": "Call legs the carrier rejected with 401/403/407 / CALL_REJECTED, with the FreeSWITCH log line. Empty = the carrier rejected nothing in the time range (good).",
       "gridPos": {
         "h": 9,
         "w": 24,
@@ -1831,7 +1834,7 @@
       "type": "logs",
       "title": "Block / unblock events (who is blocking)",
       "id": 23,
-      "description": "Every change of the block state: blocked_by=local (our end) / remote (carrier end) / none, with reason, interface and source IP.",
+      "description": "Every change of the block state: blocked_by=local (our end) / remote (carrier end) / none, with reason, interface and source IP. Each node also logs its current state once an hour.",
       "gridPos": {
         "h": 9,
         "w": 12,
