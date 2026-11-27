@@ -113,6 +113,21 @@ Agents  -> 181.214.10.246:1514 events / 1515 enrolment (DOCKER-USER: node IPs on
    Check from 244: `curl -sk -o /dev/null -w "%{http_code}
 " https://10.20.0.246:5443/wazuh/app/login` = 200.
 
+## Changing config on a running server
+
+Never `docker compose restart wazuh.manager`: the image's init then fails copying
+`var/multigroups` (exit 1) and stops before it copies `/wazuh-config-mount`, so edited rules,
+lists or ossec.conf are NOT loaded (and `init/0z-local-permissions` changes nothing). Always:
+
+```bash
+docker compose up -d --force-recreate wazuh.manager
+docker logs wazuh-wazuh.manager-1 2>&1 | grep -E "0-wazuh-init: exited|0z-local-permissions: exited"   # both "exited 0"
+```
+
+Files must have LF line endings (see `.gitattributes` in the repo root). A copy made with
+`git archive` on a Windows checkout before that file existed has CRLF: fix with
+`sed -i 's/$//'` on the scripts and config files.
+
 ## Passwords (before any server)
 
 The defaults in `.env.example` are public. Change all three:
