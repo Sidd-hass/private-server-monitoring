@@ -53,7 +53,7 @@ on the `peer` line to stop the ping.
 | Site | Nodes | Carrier peer | textfile dir | Status |
 |---|---|---|---|---|
 | UCPIN | ucpin11 .57 (SSH 2486), ucpin12 .59, ucpin13 .60 | Tata `27.107.220.70:5095` (offnet `virtual2_tata-sip`, `-myflotpri`) | `/opt/node-exporter/textfile` | config ready: `scripts/sip_peers/ucpin.conf` |
-| UCDEMO | uc11 181.214.10.237, uc12 .238 | **unconfirmed**: `203.199.43.5` (Tata Communications range, in fonouc-sip ignoreip), port assumed 5060 | `/opt/node-exporter/textfile` | confirm IP/port first |
+| UCDEMO | uc11 181.214.10.237, uc12 .238 | **no Tata trunk** (no call legs, no ACL named Tata). Two trusted peers: `mc_int_new` 103.173.93.109 = office/NAT where UCP softphones register over WSS (ping off), `mcint1` 203.199.43.5 (ping 5060, idle) | `/opt/node-exporter/textfile` | config ready: `scripts/sip_peers/ucdemo.conf` |
 | UCPMED | **ucpmed02 only** (.232); ucpmed01 cannot join the tunnel | **Etisalat** One Access SBC `192.168.3.1:5060` over IPsec `etisalat-office` (xfrm202) + VXLAN (vxlan0, 192.168.3.2); trunk FreeSWITCH `fonouc_freeswitch_trunk` from_external :5060 / to_external :5080 | `/var/lib/node_exporter/textfile` | config ready: `scripts/sip_peers/ucpmed.conf` |
 
 UCPMED has only the `sshd` fail2ban jail and no Kamailio secban (`No such htable`), so neither
