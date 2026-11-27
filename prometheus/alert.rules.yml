@@ -682,7 +682,18 @@ groups:
           alert_type: trunk
         annotations:
           summary: "{{ $labels.carrier }} trunk BLOCKED AT OUR END on {{ $labels.server_name }}: {{ $labels.reason }}"
-          description: "Our side is blocking carrier {{ $labels.carrier }} ({{ $labels.peer }}) on {{ $labels.server_name }} ({{ $labels.cluster }}). Reason: {{ $labels.reason }} (fail2ban:<jail> = banned by fail2ban, ipset:<set> / iptables:<chain> = firewall drop, kamailio:ipban = secban ban, iface_down:<if> = interface to the carrier down, listener_missing:<proc>:<port> = Kamailio/FreeSWITCH not listening). Calls to and from this carrier fail on this node."
+          description: "Our side is blocking carrier {{ $labels.carrier }} ({{ $labels.peer }}) on {{ $labels.server_name }} ({{ $labels.cluster }}). Reason: {{ $labels.reason }} (fail2ban:<jail> = banned by fail2ban, ipset:<set> / iptables:<chain> = firewall drop, kamailio:ipban = secban ban, iface_down:<if> = interface to the carrier down, listener_missing:<proc>:<port> = Kamailio/FreeSWITCH not listening, fw_allow_missing:<proto>/<port> = the firewall rule that lets the carrier in is gone). Calls to and from this carrier fail on this node."
+
+      - alert: SipCarrierTunnelDown
+        # Carriers behind a tunnel (UCPMED: Etisalat SBC over IPsec "etisalat-office" + VXLAN).
+        expr: sip_peer_blocked{blocked_by="tunnel"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          alert_type: trunk
+        annotations:
+          summary: "{{ $labels.carrier }} trunk TUNNEL DOWN on {{ $labels.server_name }}: {{ $labels.reason }}"
+          description: "The tunnel that carries {{ $labels.carrier }} ({{ $labels.peer }}) on {{ $labels.server_name }} ({{ $labels.cluster }}) is down: {{ $labels.reason }} (ipsec_down:<name> = IPsec SA to the customer FortiGate not established, iface_down:<if> = xfrm/vxlan interface down). Calls through this trunk fail. Check 'swanctl --list-sas' and the ucpmed-tunnel service; the far end may also be down."
 
       - alert: SipCarrierBlockedCarrierEnd
         expr: sip_peer_blocked{blocked_by="remote"} == 1

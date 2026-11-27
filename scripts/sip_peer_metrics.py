@@ -6,7 +6,10 @@ so scripts/freeswitch_trunk_metrics.sh does not apply). Per carrier peer it repo
 
   * who is blocking whom:
       our end    fail2ban ban, DROP/REJECT ipset or iptables rule, Kamailio secban ipban,
-                 the interface towards the peer down, an expected SIP listener missing
+                 the interface towards the peer down, an expected SIP listener missing,
+                 a required firewall ACCEPT rule for the peer missing ('allow' lines)
+      tunnel     (carriers behind a tunnel, e.g. UCPMED Etisalat over IPsec + VXLAN) the IPsec
+                 SA is not established or a required tunnel interface is down ('tunnel', 'iface')
       their end  no reply to SIP OPTIONS (when the peer answered before), 401/403/407 to
                  OPTIONS, repeated 401/403/407 or CALL_REJECTED on call legs
   * the route (interface + source IP) to the peer and every SIP listener with its interface
@@ -91,8 +94,10 @@ def in_net(ip, entry):
 # ------------------------------------------------------------------ config
 
 def load_conf(path):
-    """peer <carrier> <ip> <port> [options|none] / listen <process> <port> [udp|tcp] / log <path>"""
+    """peer <carrier> <ip> <port> [options|none] / listen <process> <port> [udp|tcp] / log <path>
+    tunnel ipsec <swanctl IKE name> / iface <name> (tunnel interfaces) / allow <udp|tcp> <port>"""
     peers, listens, logs = [], [], []
+    tunnels, ifaces, allows = [], [], []
     with open(path) as f:
         for raw in f:
             w = raw.split("#", 1)[0].split()
@@ -105,7 +110,13 @@ def load_conf(path):
                 listens.append({"process": w[1], "port": w[2], "proto": w[3] if len(w) > 3 else "udp"})
             elif w[0] == "log" and len(w) >= 2:
                 logs.append(w[1])
-    return peers, listens, logs
+            elif w[0] == "tunnel" and len(w) >= 3:
+                tunnels.append({"type": w[1], "name": w[2]})
+            elif w[0] == "iface" and len(w) >= 2:
+                ifaces.append(w[1])
+            elif w[0] == "allow" and len(w) >= 3:
+                allows.append({"proto": w[1], "port": w[2]})
+    return peers, listens, logs, tunnels, ifaces, allows
 
 
 def load_state():
@@ -252,7 +263,7 @@ def firewall():
             members.setdefault(w[1], [])
         elif len(w) >= 3 and w[0] == "add":
             members.setdefault(w[1], []).append(w[2])
-    actions, rules = {}, []
+    actions, rules, accepts = {}, [], []
     _, txt = run("iptables-save", timeout=15)
     for line in txt.splitlines():
         if not line.startswith("-A "):
@@ -266,7 +277,26 @@ def firewall():
         src = re.search(r" -s (\S+)", line)
         if src and tgt in ("DROP", "REJECT"):
             rules.append((chain, src.group(1), tgt))
-    return members, actions, rules
+        if src and tgt == "ACCEPT":
+            proto = re.search(r" -p (\S+)", line)
+            dport = re.search(r" --dports? (\S+)", line)
+            accepts.append((chain, src.group(1), proto.group(1) if proto else "all",
+                            dport.group(1) if dport else ""))
+    return members, actions, rules, accepts
+
+
+def port_in(port, spec):
+    """True if port is in an iptables --dport(s) spec: "", "5060", "50000:60000", "5060,5080"."""
+    if not spec:
+        return True
+    for part in spec.split(","):
+        lo, _, hi = part.partition(":")
+        try:
+            if int(lo or 0) <= int(port) <= int(hi or lo):
+                return True
+        except ValueError:
+            pass
+    return False
 
 
 def fail2ban():
@@ -286,8 +316,14 @@ def fail2ban():
 
 
 def kamailio_has(table, ip):
-    rc, txt = run("kamcmd", "htable.get", table, ip, timeout=5)
-    if rc == 127:
+    # kamcmd reports errors such as "No such htable" (UCPMED has no secban) on either stream.
+    try:
+        p = subprocess.run(["kamcmd", "htable.get", table, ip], stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, timeout=5, text=True)
+        rc, txt = p.returncode, p.stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if "No such htable" in txt:
         return None
     return 1 if rc == 0 and "item" in txt else 0
 
@@ -388,12 +424,12 @@ def write_events(lines):
 
 def gen(dry):
     t0 = time.time()
-    peers, expect, logs = load_conf(CONF)
+    peers, expect, logs, tunnels, tun_ifaces, allows = load_conf(CONF)
     st = load_state()
     events = []
     ifaces = interfaces()
     lst = listeners(ifaces)
-    members, actions, rules = firewall()
+    members, actions, rules, accepts = firewall()
     f2b = fail2ban()
     haproxy = [l.strip() for l in read(HAPROXY_WHITELIST).splitlines() if l.strip()]
     auth_recent = scan_logs(logs, peers, st, events)
@@ -414,6 +450,22 @@ def gen(dry):
         put("sip_listener_expected_up", labels(process=e["process"], proto=e["proto"], port=e["port"],
                                                iface=",".join(sorted({l["iface"] for l in ok})) or "none"),
             1 if ok else 0)
+
+    # Tunnel layer (UCPMED: IPsec to the customer FortiGate, VXLAN inside it).
+    tunnel_down = []
+    for t in tunnels:
+        up = 0
+        if t["type"] == "ipsec":
+            _, txt = run("swanctl", "--list-sas", "--ike", t["name"], timeout=10)
+            up = 1 if "ESTABLISHED" in txt and "INSTALLED" in txt else 0
+        put("sip_tunnel_up", labels(type=t["type"], name=t["name"]), up)
+        if not up:
+            tunnel_down.append("%s_down:%s" % (t["type"], t["name"]))
+    for n in tun_ifaces:
+        up = ifaces.get(n, {}).get("up", 0)
+        put("sip_tunnel_up", labels(type="iface", name=n), up)
+        if not up:
+            tunnel_down.append("iface_down:%s" % n)
 
     prev_blocks = st.get("blocks", {})
     blocks_now = {}
@@ -451,6 +503,13 @@ def gen(dry):
         for chain, cidr, tgt in rules:
             if in_net(ip, cidr):
                 local.append("iptables:%s:%s" % (chain, tgt))
+        for a in allows:
+            ok = any(in_net(ip, cidr) and proto in (a["proto"], "all") and port_in(a["port"], dport)
+                     for _, cidr, proto, dport in accepts)
+            put("sip_peer_fw_allow_present", labels(carrier=car, peer=peer, proto=a["proto"], port=a["port"]),
+                1 if ok else 0)
+            if not ok:
+                local.append("fw_allow_missing:%s/%s" % (a["proto"], a["port"]))
         for jail, j in sorted(f2b.items()):
             if "ssh" in jail:        # SSH jails never see SIP traffic; their whitelist is irrelevant
                 if ip in j["banned"]:
@@ -481,7 +540,7 @@ def gen(dry):
                 1 if any(in_net(ip, x) for x in haproxy) else 0)
 
         # ---- their end: OPTIONS probe and auth rejections on call legs
-        if p["probe"] and iface_up and not local:
+        if p["probe"] and iface_up and not local and not tunnel_down:
             code, rtt = sip_options(p, src)
             if code > 0:
                 probe_hist[car] = time.time()
@@ -500,9 +559,9 @@ def gen(dry):
             remote.append("auth_failures")
         put("sip_peer_auth_failures_recent", labels(**base), auth_recent.get(car, 0))
 
-        blocked_by = "local" if local else ("remote" if remote else "none")
-        reasons = local or remote or ["none"]
-        put("sip_peer_block_state", labels(**base), {"none": 0, "remote": 1, "local": 2}[blocked_by])
+        blocked_by = "local" if local else ("tunnel" if tunnel_down else ("remote" if remote else "none"))
+        reasons = local or tunnel_down or remote or ["none"]
+        put("sip_peer_block_state", labels(**base), {"none": 0, "remote": 1, "local": 2, "tunnel": 3}[blocked_by])
         for r in reasons:
             put("sip_peer_blocked", labels(carrier=car, peer=peer, blocked_by=blocked_by, reason=r),
                 0 if blocked_by == "none" else 1)
@@ -546,8 +605,10 @@ def gen(dry):
         "sip_peer_options_rtt_seconds": ("gauge", "OPTIONS round trip time"),
         "sip_peer_options_answered_recently": ("gauge", "1 if the peer answered OPTIONS in the last 7 days"),
         "sip_peer_auth_failures_recent": ("gauge", "401/403/407/CALL_REJECTED on call legs in the last 5 minutes"),
-        "sip_peer_block_state": ("gauge", "0 = not blocked, 1 = blocked at the carrier end, 2 = blocked at our end"),
-        "sip_peer_blocked": ("gauge", "1 per active block reason; blocked_by = local (our end) or remote (carrier end)"),
+        "sip_peer_block_state": ("gauge", "0 = not blocked, 1 = carrier end, 2 = our end, 3 = tunnel down"),
+        "sip_peer_blocked": ("gauge", "1 per active block reason; blocked_by = local (our end), tunnel or remote (carrier end)"),
+        "sip_tunnel_up": ("gauge", "1 if the tunnel (IPsec SA established + installed) or tunnel interface is up"),
+        "sip_peer_fw_allow_present": ("gauge", "1 if an iptables ACCEPT rule lets the peer reach this port"),
         "sip_peer_final_responses_total": ("counter", "Final SIP responses on the peer's call legs (FreeSWITCH log)"),
         "sip_peer_hangups_total": ("counter", "Hangup causes of the peer's call legs (FreeSWITCH log)"),
         "sip_peer_auth_failures_total": ("counter", "401/403/407/CALL_REJECTED on the peer's call legs"),

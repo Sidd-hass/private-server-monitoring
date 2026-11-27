@@ -38,6 +38,7 @@ on the `peer` line to stop the ping.
 | Alert | Severity | Fires when |
 |---|---|---|
 | `SipCarrierBlockedOurEnd` | critical | any `local` reason for 1 min. The summary names the mechanism |
+| `SipCarrierTunnelDown` | critical | IPsec SA or a tunnel interface down for 1 min (UCPMED) |
 | `SipCarrierBlockedCarrierEnd` | critical | any `remote` reason for 3 min (and nothing local) |
 | `SipCarrierAuthFailures` | warning | a 401/403/407 / CALL_REJECTED leg in 10 min (below the "blocked" threshold) |
 | `SipCarrierCallsBarredHigh` | warning | > 50 % of ≥ 20 legs end `*_CALL_BARRED` for 15 min |
@@ -53,10 +54,18 @@ on the `peer` line to stop the ping.
 |---|---|---|---|---|
 | UCPIN | ucpin11 .57 (SSH 2486), ucpin12 .59, ucpin13 .60 | Tata `27.107.220.70:5095` (offnet `virtual2_tata-sip`, `-myflotpri`) | `/opt/node-exporter/textfile` | config ready: `scripts/sip_peers/ucpin.conf` |
 | UCDEMO | uc11 181.214.10.237, uc12 .238 | **unconfirmed**: `203.199.43.5` (Tata Communications range, in fonouc-sip ignoreip), port assumed 5060 | `/opt/node-exporter/textfile` | confirm IP/port first |
-| UCPMED | ucpmed01 .231, ucpmed02 .232 | **unknown**: no Tata IP in fail2ban, HAProxy or recent logs | `/var/lib/node_exporter/textfile` (dubai-south-node-exporter) | fill in `scripts/sip_peers/ucpmed.conf` |
+| UCPMED | **ucpmed02 only** (.232); ucpmed01 cannot join the tunnel | **Etisalat** One Access SBC `192.168.3.1:5060` over IPsec `etisalat-office` (xfrm202) + VXLAN (vxlan0, 192.168.3.2); trunk FreeSWITCH `fonouc_freeswitch_trunk` from_external :5060 / to_external :5080 | `/var/lib/node_exporter/textfile` | config ready: `scripts/sip_peers/ucpmed.conf` |
 
-UCPMED has only the `sshd` fail2ban jail, so `fail2ban:fonouc-sip` whitelist rows do not
-exist there and `SipCarrierNotWhitelisted` only checks Kamailio trunk_ip.
+UCPMED has only the `sshd` fail2ban jail and no Kamailio secban (`No such htable`), so neither
+whitelist is checked there. Instead its config adds:
+
+- `tunnel ipsec etisalat-office`, `iface xfrm202`, `iface vxlan0`: any of them down gives the verdict
+  **TUNNEL** (`sip_peer_block_state` 3, alert `SipCarrierTunnelDown`), never "carrier end", and the
+  OPTIONS ping is skipped. The far side (Meydan's FortiGate) can also cause it.
+- `allow udp 5060`, `allow udp 50000`: the ucpmed-tunnel iptables ACCEPT rules for the SBC
+  (vxlan0 drops everything else). A missing rule = **OUR END** (`fw_allow_missing:udp/5060`).
+- `log /var/log/freeswitch_trunk/kazoo-debug.log`: the trunk FreeSWITCH log (SBC legs are
+  `sofia/from_external/<number>@192.168.3.1`).
 
 Observations made while building this (nothing was changed):
 
@@ -160,7 +169,9 @@ curl -X POST http://localhost:9090/-/reload      # new alert group
 # Grafana picks the dashboard up from provisioning within 10 s.
 ```
 
-## Tested locally (WSL Docker, 2026-11-25)
+## Tested locally (WSL Docker, 2026-11-25; UCPMED tunnel/firewall checks 2026-11-27: baseline none,
+IPsec down -> tunnel + SipCarrierTunnelDown firing, SBC silent -> remote/options_timeout, allow rule removed ->
+local/fw_allow_missing; all dashboard queries return data for cluster ucpmed)
 
 Fake SIP peer + stubbed fail2ban-client/kamcmd/ipset/iptables-save/ss, real node_exporter,
 Prometheus 2.51, Loki 3.5.8, Alloy 1.11.3, Grafana. Checked: baseline → no alert; 5×403 legs →
