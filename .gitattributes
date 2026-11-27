@@ -1,0 +1,7 @@
+# Server-side files must keep LF: this PC has core.autocrlf=true, and `git archive` / checkouts
+# would otherwise ship CRLF (scripts then fail with "bash\r: not found").
+wazuh/** text eol=lf
+scripts/** text eol=lf
+alloy/** text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
